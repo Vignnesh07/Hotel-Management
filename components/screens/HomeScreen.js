@@ -16,15 +16,24 @@ const HomeScreen = ({navigation}) => {
     const [activeCard, setActiveCard] = React.useState(0);
     const scrollHolder = useRef(new Animated.Value(0)).current;
 
-    // Function to update scrren based on selected categories
+    // Function to update screen based on selected categories
     const setCategory = selectedCategory => {
         console.log(selectedCategory);
-        if (selectedCategory !== 0) {
+        if (selectedCategory !== 0)
             setDataList([...Hotels.filter(e => e.category === categories[selectedCategory])])
-        } else {
+        else 
             setDataList(Hotels)
-        }
+            
         setSelectedCategory(selectedCategory)
+    }
+
+    // Search function that displays hotels based on hotel name
+    const search = (input) => {
+        let searchedData = Hotels.filter(e => e.name.toLowerCase().includes(input.toLowerCase()))
+        setDataList(searchedData)
+
+        if (input === '')
+            setDataList(Hotels)
     }
 
     // Function that displays the row of categories
@@ -80,7 +89,6 @@ const HomeScreen = ({navigation}) => {
             inputRange,
             outputRange: [0.8, 1, 0.8],
         });
-
 
         return (
             <TouchableOpacity
@@ -168,10 +176,13 @@ const HomeScreen = ({navigation}) => {
             {/* Search bar */}
             <View style={styles.searchContainer}>
                 <Ionicons name="search" size={25} style={{marginLeft: 20, color: Colors.lightblack}} />
-                 <TextInput 
-                      placeholder="Where to?" 
-                     style={{fontSize:15, paddingLeft:10}}
-                 /> 
+                <TextInput
+                    onChangeText={(input) => {
+                        search(input)
+                    }}
+                    placeholder="Where to?" 
+                    style={{fontSize:15, paddingLeft:10}}
+                /> 
             </View>
 
             {/* List of categories to sort hotels */}

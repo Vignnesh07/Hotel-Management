@@ -34,7 +34,7 @@ const AllHotels = ({navigation, route}) => {
 
             
                 <View style={styles.sectionStyles}>
-                    {/* Horizontal scrollale list of hotels based on categories */}
+                    {/* Vertical scrollale list of hotels based on categories */}
                     {hotels.map((item, index) => (
                         <TouchableOpacity key={index} activeOpacity={1} onPress={() => navigation.navigate('HotelDetail', item)}>
                             <View key={index} style={styles.hotelListStyle}>
