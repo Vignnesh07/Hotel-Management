@@ -46,13 +46,11 @@ function HomeStackScreen(){
 function ProfileStackScreen(){
   return(
     <StackNav.Navigator screenOptions={{headerShown:false}}  >
-      
       <StackNav.Screen 
           name="Profile" 
           component={ProfileScreen} 
       />
       <StackNav.Screen 
-          
           name="LogIn" 
           component={LogInScreen} 
       />
@@ -84,8 +82,16 @@ export default class App extends Component {
           screenOptions={({route}) => ({
             headerShown: false,
             tabBarHideOnKeyboard: true,
+            tabBarActiveTintColor: Colors.primary,
+            tabBarInactiveTintColor: "black",
+            // tabBarLabelStyle: {
+            //   fontSize: 12,
+            //   marginBottom: 13,
+            // },
             tabBarStyle:{
               height:80,
+              // borderRadius:20,
+              // width: fullScreenWidth,
             },
             tabBarIcon: ({focused, color, size, padding}) => {
               let iconName;
@@ -109,33 +115,10 @@ export default class App extends Component {
               );
             },
           })}
-          // tabBarOptions={{
-          //   activeTintColor: Colors.primary,
-          //   inactiveTintColor: 'black',
-          //   labelStyle: {
-          //     fontSize: 12,
-          //     marginBottom: 19 
-
-          //   },
-          //   style: {
-          //   borderRadius:20,
-          //   width: fullScreenWidth,
-          // },
-          // }}
         >
-          <Tab.Screen
-            
-            name="TabHome"
-            component={HomeStackScreen}
-          />
-            <Tab.Screen
-            name="Bookings"
-            component={BookingScreen}
-          />
-          <Tab.Screen
-            name="Wishlists"
-            component={WishlistScreen}
-          />
+          <Tab.Screen name="TabHome" component={HomeStackScreen} />
+          <Tab.Screen name="Bookings" component={BookingScreen} />
+          <Tab.Screen name="Wishlists" component={WishlistScreen} />
           <Tab.Screen
             name="TabProfile"
             component={ProfileStackScreen}
@@ -151,7 +134,6 @@ export default class App extends Component {
               })(route),
             })}
           />
-
         </Tab.Navigator>
       </NavigationContainer>
     );

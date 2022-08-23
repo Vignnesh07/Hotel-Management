@@ -1,7 +1,7 @@
 {/* MAIN SCREEN */}
 
 
-import React, {Component} from 'react';
+import React, {Component, useState} from 'react';
 import {StyleSheet, Animated, SafeAreaView, Text, Image, View, TouchableOpacity, Dimensions} from 'react-native';
 import { FlatList, ScrollView, TextInput } from 'react-native-gesture-handler';
 
@@ -15,10 +15,23 @@ const holderWidth = width / 1.8;
 
 const HomeScreen = ({navigation}) => {
     const categories = ['All', 'Popular', 'Best Selling', 'Featured', 'Luxury'];
-    const [selectedCategory, setSelectedCategory] = React.useState(0);
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [dataList, setDataList] = useState(Hotels);
     const [activeCard, setActiveCard] = React.useState(0);
     const scrollHolder = React.useRef(new Animated.Value(0)).current;
 
+    // Function to update scrren based on selected categories
+    const setCategory = selectedCategory => {
+        console.log(selectedCategory);
+        if (selectedCategory !== 0) {
+            setDataList([...Hotels.filter(e => e.category === categories[selectedCategory])])
+        } else {
+            setDataList(Hotels)
+        }
+        setSelectedCategory(selectedCategory)
+    }
+
+    // Function that displays the row of categories
     const CategoryList = () => {
         return(
             <View style={styles.categoryListContainer}>
@@ -26,7 +39,7 @@ const HomeScreen = ({navigation}) => {
                     <TouchableOpacity 
                         key={index} 
                         activeOpacity={0.8}
-                        onPress={() => setSelectedCategory(index)}>
+                        onPress={() => setCategory(index)}>
                         <View>
                             <Text 
                                 style={{
@@ -35,20 +48,19 @@ const HomeScreen = ({navigation}) => {
                                         selectedCategory == index
                                             ?Colors.primary
                                             :Colors.grey,
-                                    }}>
-                                    {item}
+                                }}>
+                                {item}
                             </Text>
                             {selectedCategory == index && (
-                            <View
-                            style={{
-                                height: 3,
-                                width: 20,
-                                marginTop: 2,
-                                backgroundColor: Colors.primary,
-                            }}
-                            />
-                        )}
-
+                                <View
+                                    style={{
+                                        height: 3,
+                                        width: 20,
+                                        marginTop: 2,
+                                        backgroundColor: Colors.primary,
+                                    }}
+                                />
+                            )}
                         </View>
                     </TouchableOpacity>
                 ))}
@@ -56,6 +68,7 @@ const HomeScreen = ({navigation}) => {
         );
     };
 
+    // Function to display the top row of hotels 
     const Holder =({hotel, index}) => {
 
         const inputRange = [
@@ -116,35 +129,37 @@ const HomeScreen = ({navigation}) => {
         );
     };
 
-   const PopularHotel = ({hotel}) =>{
-    return(
-        <View style={styles.popularHotelStyle}>
-            <View
-                style={{
-                    position: 'absolute',
-                    top: 5,
-                    right: 5,
-                    zIndex: 1,
-                    flexDirection: 'row',
-                }}>
-                <Ionicons name="star" size={15} color={Colors.orange} />
-                <Text style={{color: Colors.white, fontWeight: 'bold', fontSize: 15}}>4.6</Text>
+    // Container to display the nearby hotels 
+    const NearYouHotels = ({hotel}) =>{
+        return(
+            <View style={styles.popularHotelStyle}>
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 5,
+                        right: 5,
+                        zIndex: 1,
+                        flexDirection: 'row',
+                    }}>
+                    <Ionicons name="star" size={15} color={Colors.orange} />
+                    <Text style={{color: Colors.white, fontWeight: 'bold', fontSize: 15}}>4.6</Text>
+                </View>
+                
+                <Image style={styles.popularImage} source={hotel.image} />
+                <View style={{paddingVertical: 5, paddingHorizontal:10}}>
+                    <Text style={{fontSize: 11, fontWeight: 'bold'}}>{hotel.name}</Text>
+                    <Text style={{fontSize: 8, color: Colors.grey}}>{hotel.location}</Text>
+                </View>
             </View>
-            
-            <Image style={styles.popularImage} source={hotel.image} />
-            <View style={{paddingVertical: 5, paddingHorizontal:10}}>
-                <Text style={{fontSize: 11, fontWeight: 'bold'}}>{hotel.name}</Text>
-                <Text style={{fontSize: 8, color: Colors.grey}}>{hotel.location}</Text>
-            </View>
-        </View>
-    );
-   };
+        );
+    };
 
 
     return(
         <SafeAreaView style={styles.container}>
-            <View>
 
+            {/* Header with App Logo and Title */}
+            <View>
                 <View>
                     <Image style={styles.image} source={require('../../assets/img/Logo.png')} /> 
                 </View>
@@ -154,6 +169,7 @@ const HomeScreen = ({navigation}) => {
                 </View>
             </View>
 
+            {/* Search bar */}
             <View style={styles.searchContainer}>
                 <Ionicons name="search" size={25} style={{marginLeft: 20, color: Colors.lightblack}} />
                  <TextInput 
@@ -161,9 +177,13 @@ const HomeScreen = ({navigation}) => {
                      style={{fontSize:15, paddingLeft:10}}
                  /> 
             </View>
+
+            {/* List of categories to sort hotels */}
             <CategoryList/>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+                
+                {/* Horizontal scrollale list of hotels based on categories */}
                 <View>
                     <Animated.FlatList
                         onMomentumScrollEnd={(e) => {
@@ -176,22 +196,25 @@ const HomeScreen = ({navigation}) => {
                             {useNativeDriver: true},
                         )}
                         horizontal
-                        data={Hotels}
+                        data={dataList}
                         contentContainerStyle={{paddingVertical: 30, paddingLeft: 20, paddingRight: holderWidth / 2 - 50,}}
                         showsHorizontalScrollIndicator={false}
                         renderItem={({item, index}) => <Holder hotel={item} index={index} />}
                         snapToInterval={holderWidth}
                     />
                 </View>
+
+                {/* Section divider with title */}
                 <View style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     marginHorizontal: 20,
                 }}>
-                    <Text style={{fontWeight: 'bold', color: "black"}}> Popular Hotels </Text>
+                    <Text style={{fontWeight: 'bold', color: "black"}}> Near You </Text>
                     <Text style={{ color: "black"}}> Show All </Text>
                 </View>
                 
+                {/* Horizontal scrollable list of nearby hotels */}
                 <FlatList 
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -201,18 +224,16 @@ const HomeScreen = ({navigation}) => {
                         paddingLeft: 20,
                         paddingBottom: 30,
                     }}
-                    renderItem ={({item}) => <PopularHotel hotel={item} />}
-
+                    renderItem ={({item}) => <NearYouHotels hotel={item} />}
                 />
-                
             </ScrollView>
+
         </SafeAreaView>
     );
 };
 
 
 const styles = StyleSheet.create({
-
     container:{
         flex: 1,
         backgroundColor: Colors.white,
