@@ -1,12 +1,8 @@
-{/* HOTEL DETAIL (Descriptrion) */}
-
-
-import { DrawerItem } from '@react-navigation/drawer';
 import React, {Component} from 'react';
 import {ScrollView, Text, StyleSheet, ImageBackground, StatusBar, View} from 'react-native';
-
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
 import Colors from '../const/color'
 
 const HotelDetailScreen = ({navigation, route}) => {

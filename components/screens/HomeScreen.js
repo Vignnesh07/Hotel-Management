@@ -1,12 +1,8 @@
-{/* MAIN SCREEN */}
-
-
-import React, {Component, useState} from 'react';
-import {StyleSheet, Animated, SafeAreaView, Text, Image, View, TouchableOpacity, Dimensions} from 'react-native';
+import React, {Component, useState, useRef} from 'react';
+import {StyleSheet, Animated, SafeAreaView, Text, Image, View, TouchableOpacity, Dimensions, Button} from 'react-native';
 import { FlatList, ScrollView, TextInput } from 'react-native-gesture-handler';
-
-
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
 import Colors from '../const/color'
 import Hotels from '../const/hotel'
 
@@ -18,7 +14,7 @@ const HomeScreen = ({navigation}) => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [dataList, setDataList] = useState(Hotels);
     const [activeCard, setActiveCard] = React.useState(0);
-    const scrollHolder = React.useRef(new Animated.Value(0)).current;
+    const scrollHolder = useRef(new Animated.Value(0)).current;
 
     // Function to update scrren based on selected categories
     const setCategory = selectedCategory => {
@@ -158,7 +154,7 @@ const HomeScreen = ({navigation}) => {
     return(
         <SafeAreaView style={styles.container}>
 
-            {/* Header with App Logo and Title */}
+            {/* Header with app logo and title */}
             <View>
                 <View>
                     <Image style={styles.image} source={require('../../assets/img/Logo.png')} /> 
@@ -211,7 +207,9 @@ const HomeScreen = ({navigation}) => {
                     marginHorizontal: 20,
                 }}>
                     <Text style={{fontWeight: 'bold', color: "black"}}> Near You </Text>
-                    <Text style={{ color: "black"}}> Show All </Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('AllHotels', Hotels)}>
+                        <Text style={{ color: "black"}}> Show All </Text> 
+                    </TouchableOpacity>
                 </View>
                 
                 {/* Horizontal scrollable list of nearby hotels */}
@@ -243,7 +241,7 @@ const styles = StyleSheet.create({
         width: 70,
         height: 70,
         marginLeft: 20,
-      }, 
+    }, 
     searchContainer:{
         height: 50,
         backgroundColor: Colors.light,

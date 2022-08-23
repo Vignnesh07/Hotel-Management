@@ -5,6 +5,7 @@ import BookingScreen from './components/screens/BookingScreen';
 import WishlistScreen from './components/screens/WishlistScreen';
 import ProfileScreen from './components/screens/ProfileScreen';
 import HotelDetailScreen from './components/screens/HotelDetailScreen';
+import AllHotels from './components/screens/AllHotels';
 
 import LogInScreen from './components/Navigation/LogInScreen';
 import SignUpScreen from './components/Navigation/SignUpScreen'; 
@@ -30,14 +31,21 @@ const fullScreenWidth = Dimensions.get('window').width
 
 function HomeStackScreen(){
   return(
-    <StackNav.Navigator screenOptions={{headerShown:false}}  >
+    <StackNav.Navigator>
       <StackNav.Screen 
           name="Home" 
           component={HomeScreen} 
+          options={{headerShown: false}}
       />
       <StackNav.Screen  
           name="HotelDetail" 
           component={HotelDetailScreen} 
+          options={{headerShown: false}}
+      />
+      <StackNav.Screen  
+          name="AllHotels" 
+          component={AllHotels} 
+          options={{headerShown: true, headerTitle: '', headerShadowVisible: false,}}
       />
     </StackNav.Navigator>
   );
