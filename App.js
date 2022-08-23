@@ -1,112 +1,159 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import Colors from './components/const/color';
 
-import React from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import HomeScreen from './components/screens/HomeScreen';
+import BookingScreen from './components/screens/BookingScreen';
+import WishlistScreen from './components/screens/WishlistScreen';
+import ProfileScreen from './components/screens/ProfileScreen';
+import HotelDetailScreen from './components/screens/HotelDetailScreen';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import LogInScreen from './components/Navigation/LogInScreen';
+import SignUpScreen from './components/Navigation/SignUpScreen'; 
+import ForgotPasswordScreen from './components/Navigation/ForgotPasswordScreen';
+import ProfileLogedInScreen from './components/Navigation/ProfileLogedInScreen';
 
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+import 'react-native-gesture-handler';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import React, {Component} from 'react';
+import {StatusBar, Text, Dimensions} from 'react-native';
+import {NavigationContainer, getFocusedRouteNameFromRoute} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+
+import {LogBox} from 'react-native';
+import { and } from 'react-native-reanimated';
+LogBox.ignoreLogs (['EventEmitter.removeListener']);
+
+
+const StackNav = createStackNavigator();
+const Tab = createBottomTabNavigator ();
+const fullScreenWidth = Dimensions.get('window').width
+
+function HomeStackScreen(){
+  return(
+    <StackNav.Navigator screenOptions={{headerShown:false}}  >
+      <StackNav.Screen 
+          name="Home" 
+          component={HomeScreen} 
+      />
+      <StackNav.Screen  
+          name="HotelDetail" 
+          component={HotelDetailScreen} 
+      />
+    </StackNav.Navigator>
   );
-};
+}
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+function ProfileStackScreen(){
+  return(
+    <StackNav.Navigator screenOptions={{headerShown:false}}  >
+      
+      <StackNav.Screen 
+          name="Profile" 
+          component={ProfileScreen} 
+      />
+      <StackNav.Screen 
+          
+          name="LogIn" 
+          component={LogInScreen} 
+      />
+      <StackNav.Screen 
+          name="SignUp" 
+          component={SignUpScreen} 
+      />
+      <StackNav.Screen 
+          name="Forgot" 
+          component={ForgotPasswordScreen} 
+      />
+      <StackNav.Screen 
+          name="ProfileLogedIn" 
+          component={ProfileLogedInScreen} 
+      />
+    </StackNav.Navigator>
   );
-};
+}
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
-export default App;
+
+export default class App extends Component {
+  render(){
+    return (
+      <NavigationContainer >
+        <StatusBar backgroundColor={Colors.white} barStyle="dark-content" />
+        <Tab.Navigator
+          initialRouteName={'TabHome'}
+          screenOptions={({route}) => ({
+            headerShown: false,
+            tabBarHideOnKeyboard: true,
+            tabBarStyle:{
+              height:80,
+            },
+            tabBarIcon: ({focused, color, size, padding}) => {
+              let iconName;
+              if (route.name === 'TabHome'){
+                iconName = focused ? 'home' : 'home-outline';
+              } else if (route.name === 'Bookings') {
+                iconName = focused ? 'book' : 'book-outline';
+              } else if (route.name === 'Wishlists') {
+                iconName = focused ? 'bookmarks' : 'bookmarks-outline';
+              } else if (route.name === 'TabProfile') {
+                iconName = focused ? 'person-circle' : 'person-circle-outline';
+              }
+              
+              return ( <Ionicons 
+                name={iconName}
+                size={size}
+                color={color}
+                style={{paddingBottom: padding, marginBottom: 10, marginTop: 10}} 
+                />
+                
+              );
+            },
+          })}
+          // tabBarOptions={{
+          //   activeTintColor: Colors.primary,
+          //   inactiveTintColor: 'black',
+          //   labelStyle: {
+          //     fontSize: 12,
+          //     marginBottom: 19 
+
+          //   },
+          //   style: {
+          //   borderRadius:20,
+          //   width: fullScreenWidth,
+          // },
+          // }}
+        >
+          <Tab.Screen
+            
+            name="TabHome"
+            component={HomeStackScreen}
+          />
+            <Tab.Screen
+            name="Bookings"
+            component={BookingScreen}
+          />
+          <Tab.Screen
+            name="Wishlists"
+            component={WishlistScreen}
+          />
+          <Tab.Screen
+            name="TabProfile"
+            component={ProfileStackScreen}
+            options={({ route}) => ({
+              tabBarStyle: ((route) => {
+                const routeName = getFocusedRouteNameFromRoute(route) ?? ""
+                console.log(routeName)
+                if (routeName === 'LogIn' || routeName === 'SignUp' || routeName === 'Forgot') {
+                  return { display: "none" }
+                }else{
+                  return { height: 80}
+                }
+              })(route),
+            })}
+          />
+
+        </Tab.Navigator>
+      </NavigationContainer>
+    );
+  }
+}
