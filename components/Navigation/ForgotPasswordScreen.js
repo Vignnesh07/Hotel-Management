@@ -1,10 +1,26 @@
-import React, {Component} from "react";
+import React, {Component,useState} from "react";
 import {Alert, Text, View, StyleSheet, Modal, Dimensions, TouchableOpacity, StatusBar, Image, useWindowDimensions, TextBase} from "react-native";
 
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../const/color'
 import { TextInput } from "react-native-gesture-handler";
+
+const isValidObjField = (obj) =>{
+    return Object.values(obj).every(value=> value.trim())
+}
+
+const updateError = (error,stateUpdater) =>{
+    stateUpdater(error);
+    setTimeout(() => {
+        stateUpdater('')
+    }, 2500);
+}
+
+const isValidEmail = (value) =>{
+    const regx = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
+    return regx.test(value)
+}
 
 const showAlert = () =>
   Alert.alert(
@@ -15,7 +31,34 @@ const showAlert = () =>
     ]
   );
 
-const ForgotPasswordScreen = ({navigation, value, setValue}) => {
+const ForgotPasswordScreen = ({navigation, onPress}) => {
+    const [userInfo , setUserInfo]= useState({
+
+        email: ''
+    });
+
+    const [error, setError] = useState('')
+
+    const handleOnChangeText = (value,fieldName)=> {
+        setUserInfo({...userInfo,[fieldName]:value})
+    };
+
+    const isValidForm = () =>{
+        if(!isValidObjField(userInfo)) return updateError('Please Enter Your Email!' , setError)
+
+        if(!isValidEmail(email)) return updateError('Invalid Email!' , setError)
+    
+    return true;
+
+    };
+
+    const submitForm = ()=>{
+        if(isValidForm()){
+            showAlert()
+        }
+    };
+    const {email} = userInfo;
+
     return(
         <View style={styles.container}>
             <View style={styles.backNav}>
@@ -45,13 +88,24 @@ const ForgotPasswordScreen = ({navigation, value, setValue}) => {
                         to reset your password.
                     </Text>
                 </View>
+            
+            {error ? ( 
+            <Text style = {{color : 'red' ,fontSize : 13, textAlign: 'center'}}>
+                {error}
+            </Text>
+            ):null }
 
             <View style={styles.inputContainer} >
-                <TextInput  placeholder="Email Address" keyboardType={'email-address'} value={value} onChangeText={setValue}  style={styles.input} />
+                <TextInput  placeholder="Email Address" 
+                keyboardType={'email-address'} 
+                value={email} 
+                onChangeText={(value) => handleOnChangeText(value,'email')} 
+                autoCapitalize = 'none' 
+                style={styles.input} />
             </View>
 
             <View style={styles.forgottenButton}>
-                <TouchableOpacity onPress={showAlert}>
+                <TouchableOpacity onPress={submitForm}>
                     <View style={styles.buttonContainer}>
                         <Text style={{color: Colors.white, fontSize: 20, fontWeight: 'bold'}}>Reset Password</Text>
                     </View>
