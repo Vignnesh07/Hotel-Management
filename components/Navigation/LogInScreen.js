@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component, useState} from "react";
 import {Text, View, StyleSheet, Modal, Dimensions, TouchableOpacity, StatusBar, Image, useWindowDimensions, TextBase} from "react-native";
 
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -6,8 +6,48 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../const/color'
 import { TextInput } from "react-native-gesture-handler";
 
+const isValidObjField = (obj) =>{
+    return Object.values(obj).every(value=> value.trim())
+}
 
-const LogInScreen = ({navigation, value, setValue}) => {
+const updateError = (error,stateUpdater) =>{
+    stateUpdater(error);
+    setTimeout(() => {
+        stateUpdater('')
+    }, 2500);
+}
+
+const LogInScreen = ({navigation, onPress}) => {
+
+    const [userInfo , setUserInfo]= useState({
+
+        username: '',
+        password: '',
+    });
+
+    const [error, setError] = useState('')
+
+    const handleOnChangeText = (value,fieldName)=> {
+        setUserInfo({...userInfo,[fieldName]:value})
+    };
+
+    const isValidForm = () =>{
+        if(!isValidObjField(userInfo)) return updateError('Please Enter Your Username and Password!' , setError)
+
+        if(username.length < 5 || username.length > 9 ) return updateError('Invalid Username' , setError)
+        
+    
+    return true;
+
+    };
+
+    const submitForm = ()=>{
+        if(isValidForm()){
+            console.log(userInfo)
+        }
+    };
+    const {username, password} = userInfo;
+
     return(
         
         
@@ -24,14 +64,25 @@ const LogInScreen = ({navigation, value, setValue}) => {
             <StatusBar backgroundColor={Colors.white} barStyle="dark-content" />
             <Image style={styles.logo} source={require('../../assets/img/Logo.png')} />
 
+            {error ? ( 
+            <Text style = {{color : 'red' ,fontSize : 13, textAlign: 'center'}}>
+                {error}
+            </Text>
+            ):null }
+
             <View style={styles.inputContainer} >
-                <TextInput  placeholder="Username" value={value} onChangeText={setValue}  style={styles.input} />
+                <TextInput  placeholder="Username" 
+                value={username} 
+                onChangeText={(value) => handleOnChangeText(value,'username')} 
+                autoCapitalize = 'none'
+                style={styles.input} />
             </View>
             <View style={styles.inputContainer} >
                 <TextInput  
                     placeholder="Password" 
-                    value={value} 
-                    onChangeText={setValue} 
+                    value={password} 
+                    onChangeText={(value) => handleOnChangeText(value,'password')} 
+                    autoCapitalize = 'none'
                     secureTextEntry={true}
                     style={styles.input} />
             </View>
@@ -44,7 +95,7 @@ const LogInScreen = ({navigation, value, setValue}) => {
 
 
             <View style={styles.loginButton}>
-                <TouchableOpacity onPress={() => navigation.navigate('ProfileLogedIn')}>
+                <TouchableOpacity onPress={submitForm}>
                     <View style={styles.buttonContainer}>
                         <Text style={{color: Colors.white, fontSize: 20, fontWeight: 'bold'}}>Log In</Text>
                     </View>
