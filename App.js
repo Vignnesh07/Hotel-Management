@@ -134,18 +134,18 @@ export default class App extends Component {
           <Tab.Screen name="Wishlists" component={WishlistScreen} />
           <Tab.Screen
             name="TabProfile"
-            component={ProfileLogedInScreen}
-            // options={({ route}) => ({
-            //   tabBarStyle: ((route) => {
-            //     const routeName = getFocusedRouteNameFromRoute(route) ?? ""
-            //     console.log(routeName)
-            //     if (routeName === 'LogIn' || routeName === 'SignUp' || routeName === 'Forgot') {
-            //       return { display: "none" }
-            //     }else{
-            //       return { height: 80}
-            //     }
-            //   })(route),
-            // })}
+            component={ProfileStackScreen}
+            options={({ route}) => ({
+              tabBarStyle: ((route) => {
+                const routeName = getFocusedRouteNameFromRoute(route) ?? ""
+                console.log(routeName)
+                if (routeName === 'LogIn' || routeName === 'SignUp' || routeName === 'Forgot') {
+                  return { display: "none" }
+                }else{
+                  return { height: 80}
+                }
+              })(route),
+            })}
           />
         </Tab.Navigator>
       </NavigationContainer>
