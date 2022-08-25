@@ -15,6 +15,7 @@ import ProfileLogedInScreen from './components/Navigation/ProfileLogedInScreen';
 import BookNowScreen from './components/BookingNavigation/BookNowScreen';
 import PaymentScreen from './components/BookingNavigation/PaymentScreen';
 import CompletedBookingScreen from './components/BookingNavigation/CompletedBookingScreen';
+import CancelBookingScreen from './components/BookingNavigation/CancelBookingScreen';
 
 import 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -108,6 +109,10 @@ function TopTabsFunction(){
       <TopTabs.Screen 
           name="Completed" 
           component={CompletedBookingScreen} 
+      />
+      <TopTabs.Screen 
+          name="Cancelled" 
+          component={CancelBookingScreen} 
       />
     </TopTabs.Navigator>
   );
