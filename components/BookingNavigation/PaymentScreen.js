@@ -1,18 +1,17 @@
 import React, {Component, useState} from "react";
 import {Text, View, StyleSheet, Dimensions, TouchableOpacity, StatusBar, Image, Button, useWindowDimensions, TextBase, TouchableNativeFeedback} from "react-native";
-
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Colors from '../const/color'
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { color } from "react-native-reanimated";
 import {useNavigate} from 'react-router-dom';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { RadioButton } from 'react-native-paper';
 import { PaymentIcon } from 'react-native-payment-icons';
-import { Modal } from "./modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import Colors from '../const/color'
+import { Modal } from "./modal";
 
 const PaymentScreen = ({navigation, route}) => {
 
@@ -99,7 +98,6 @@ const PaymentScreen = ({navigation, route}) => {
 };
 
 const styles = StyleSheet.create({
-
     container:{
         backgroundColor: Colors.white, 
         flex: 1,

@@ -1,9 +1,7 @@
 import React, {Component, useState} from "react";
 import { SafeAreaView,Text, View, StyleSheet, Dimensions, TouchableOpacity, StatusBar, Image, useWindowDimensions, TextBase, TouchableNativeFeedback, Button, Platform} from "react-native";
-
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Colors from '../const/color'
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { color, ColorSpace } from "react-native-reanimated";
 import {useNavigate} from 'react-router-dom';
@@ -11,6 +9,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import CounterInput from "react-native-counters";
 
 import { Modal } from "../components/modal";
+import Colors from '../const/color'
 
 
 
@@ -42,7 +41,7 @@ const CompletedBookingScreen = ({navigation, route}) =>{
                             <View style={{flexDirection:'row', margin:15}}>
                                 <Image 
                                     style={styles.popularImage}
-                                    source={require('../../assets/img/hotel1.jpg')}
+                                    source={require('../../assets/img/Logo.png')}
                                 />
 
                                 <View style={{flexDirection:'column', marginTop: 30, marginLeft: 20}}> 

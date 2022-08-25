@@ -42,7 +42,7 @@ const BookingScreen = ({navigation, route}) => {
                             <View style={{flexDirection:'row', margin:15}}>
                                 <Image 
                                     style={styles.popularImage}
-                                    source={require('../../assets/img/hotel1.jpg')}
+                                    source={require('../../assets/img/Logo.png')}
                                 />
 
                                 <View style={{flexDirection:'column', marginTop: 30, marginLeft: 20}}> 
@@ -129,7 +129,7 @@ const BookingScreen = ({navigation, route}) => {
                             <View style={{flexDirection:'row', margin:15}}>
                                 <Image 
                                     style={styles.popularImage}
-                                    source={require('../../assets/img/hotel1.jpg')}
+                                    source={require('../../assets/img/Logo.png')}
                                 />
 
                                 <View style={{flexDirection:'column', marginTop: 30, marginLeft: 20}}> 
@@ -220,19 +220,15 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white, 
         flex: 1,
     },
-
     line:{
         textAlign: 'center'
-
     },
-
     popularImage:{
         height: 140,
         width: 140,
         borderRadius: 20,
         flexDirection:'row', 
     },
-
     mainBox:{
         backgroundColor: Colors.light,
         marginLeft: 10,
@@ -244,7 +240,6 @@ const styles = StyleSheet.create({
     verticalBox: {
         flexDirection: 'row',
         width: '100%',
-
     },
     verticleLine: {
         height: '100%',
