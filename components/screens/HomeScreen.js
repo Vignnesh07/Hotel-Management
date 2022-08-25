@@ -1,10 +1,12 @@
-import React, {Component, useState, useRef} from 'react';
+import React, {Component, useState, useRef, componentDidMount} from 'react';
 import {StyleSheet, Animated, SafeAreaView, Text, Image, View, TouchableOpacity, Dimensions, Button} from 'react-native';
 import { FlatList, ScrollView, TextInput } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { collection, getDocs } from 'firebase/firestore/lite';
 
 import Colors from '../const/color'
 import Hotels from '../const/hotel'
+import { firebaseDB } from '../../firebase/firebase-config';
 
 const {width} = Dimensions.get('screen');
 const holderWidth = width / 1.8;
@@ -15,6 +17,15 @@ const HomeScreen = ({navigation}) => {
     const [dataList, setDataList] = useState(Hotels);
     const [activeCard, setActiveCard] = React.useState(0);
     const scrollHolder = useRef(new Animated.Value(0)).current;
+
+    // Function to retrieve data from Firestore
+    const query = async () => {
+        const hotelsCollection = collection(firebaseDB, 'hotels');
+        const hotelSnapshot = await getDocs(hotelsCollection);
+        const hotelList = hotelSnapshot.docs.map(doc => doc.data());
+    }
+
+    query();
 
     // Function to update screen based on selected categories
     const setCategory = selectedCategory => {

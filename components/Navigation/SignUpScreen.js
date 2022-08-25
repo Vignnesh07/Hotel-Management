@@ -5,11 +5,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { TextInput } from "react-native-gesture-handler";
 import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { Overlay } from "@rneui/base";
+import { doc, setDoc, } from 'firebase/firestore/lite';
 
 import FormSuccess from "../shared/formSuccess";
 import Loader from '../shared/loader'
 import Colors from '../const/color';
-import { authentication } from '../../firebase/firebase-config';
+import { authentication, firebaseDB } from '../../firebase/firebase-config';
 
 // TextField not empty validation function
 const isValidObjField = (obj) =>{
@@ -24,20 +25,32 @@ const SignUpScreen = ({navigation,onPress}) => {
         password: '',
         confirm_password: '',
     })
-    const{username, phone_num, email, password, confirm_password} = userInfo
+    const {username, phone_num, email, password, confirm_password} = userInfo
     const [loader, setLoader] = useState(false);
     const [OverlayText, setOverlayText] = useState("");
     const [popUpErr, setpopUpErr] = useState(false);
 
-    // Listens to auth changes 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(authentication, (user) => {
-            if (user) {
-                navigation.navigate('ProfileLogedIn');
+    // Function to store user data from Firestore
+    const query = async (uid) => {
+        await setDoc(
+            doc(firebaseDB, "users", uid), {
+                name: username,
+                phoneNo: phone_num,
+                email: email,
+                uid: uid,
             }
-        });
-        return unsubscribe
-    }, [])
+        );
+    }
+
+    // Listens to auth changes 
+    // useEffect(() => {
+    //     const unsubscribe = onAuthStateChanged(authentication, (user) => {
+    //         if (user) {
+    //             // navigation.navigate('ProfileLogedIn');
+    //         }
+    //     });
+    //     return unsubscribe
+    // }, [])
 
     // OnChangeText function for textfields 
     const handleOnChangeText = (value,fieldName)=> {
@@ -80,7 +93,7 @@ const SignUpScreen = ({navigation,onPress}) => {
             createUserWithEmailAndPassword(authentication, email, password)
             .then((userCredentials) => {
                 const user = userCredentials.user;
-                console.log("Registered with: ", user.email);
+                query(user.uid);
                 setLoader(false);
             })
             .catch((e) => {
