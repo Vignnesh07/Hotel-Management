@@ -1,13 +1,42 @@
-import React, {Component} from 'react';
-import {ScrollView, Text, StyleSheet, ImageBackground, StatusBar, View, TouchableOpacity, SafeAreaView} from 'react-native';
+import React, { Component, useState, useEffect } from 'react';
+import { ScrollView, Text, StyleSheet, ImageBackground, StatusBar, View, TouchableOpacity, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { onAuthStateChanged } from "firebase/auth";
+import { Overlay } from "@rneui/base";
 
+import FormSuccess from "../shared/formSuccess";
+import { authentication } from '../../firebase/firebase-config';
 import Colors from '../const/color'
 
 const HotelDetailScreen = ({navigation, route}) => {
-    const item = route.params;
-    console.log(item);
+
+    const hotel = route.params;
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [OverlayText, setOverlayText] = useState("");
+    const [popUpErr, setpopUpErr] = useState(false);
+
+    // Listens to auth changes 
+    useEffect(() => { 
+        onAuthStateChanged(authentication, (user) => {
+        if (user) 
+            setIsLoggedIn(true);
+        else
+            setIsLoggedIn(false);
+        });
+    })
+
+    // Function to handle booking logic - if signed-in, then proceed
+    const canBook = () => {
+        if (isLoggedIn) {
+            navigation.navigate('BookNow', hotel)
+        }
+        else {
+            setOverlayText("Please sign-in to place a booking");
+            setpopUpErr(true);
+        }
+    }
+
     return(
         <SafeAreaView>
             <View>
@@ -27,7 +56,7 @@ const HotelDetailScreen = ({navigation, route}) => {
 
                 <ImageBackground 
                     style={styles.desImage}
-                    source={{uri: item.image}}
+                    source={{uri: hotel.image}}
                 >    
                     <View style={styles.backBookNav}>
                     <Ionicons
@@ -44,7 +73,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                         <Icon name="place" color={Colors.white} size={35} />
                     </View>
                     <View style={{marginTop: 20, paddingHorizontal: 20}}>
-                        <Text style={{fontSize: 23, fontWeight: 'bold', color: 'black'}}>{item.name}</Text>
+                        <Text style={{fontSize: 23, fontWeight: 'bold', color: 'black'}}>{hotel.name}</Text>
                         <Text
                             style={{
                                 fontSize: 15,
@@ -52,7 +81,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                                 color: Colors.grey,
                                 marginTop: 5,
                             }}>
-                            {item.location}
+                            {hotel.location}
                         </Text>
 
                         <View
@@ -74,7 +103,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                             <Text style={{fontSize: 13, color: Colors.grey}}>2729 reviews</Text>
                         </View>
                         <View>
-                            <Text style={{lineHeight: 20, color: Colors.grey, textAlign: 'justify'}}>{item.details}</Text>
+                            <Text style={{lineHeight: 20, color: Colors.grey, textAlign: 'justify'}}>{hotel.details}</Text>
                         </View>
                     </View>
                     <View style={{
@@ -92,7 +121,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                             fontWeight: 'bold',
                             color: '#15456b',
                             marginLeft: 5,
-                        }}>RM{item.price}
+                        }}>RM{hotel.price}
                         </Text>
                         <Text
                         style={{
@@ -106,13 +135,17 @@ const HotelDetailScreen = ({navigation, route}) => {
                         </View>
                     </View>
                     <View>
-                        <TouchableOpacity onPress = {() => navigation.navigate('BookNow', item)}>
+                        <TouchableOpacity onPress = {canBook}>
                             <View style={styles.bookButton}>
                                 <Text style={{color: Colors.white, fontSize: 18, fontWeight: 'bold'}}>Book Now</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
                 </View>
+
+                <Overlay isVisible={popUpErr} overlayStyle={{backgroundColor: "white", borderColor: "white", borderRadius: 20}} onBackdropPress={() => setpopUpErr(false)}>
+                    <FormSuccess errorBtn={() => setpopUpErr(false)} text={OverlayText} error={popUpErr} />
+                </Overlay>
             </ScrollView>
         </SafeAreaView>
     );

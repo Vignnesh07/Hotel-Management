@@ -42,16 +42,6 @@ const SignUpScreen = ({navigation,onPress}) => {
         );
     }
 
-    // Listens to auth changes 
-    // useEffect(() => {
-    //     const unsubscribe = onAuthStateChanged(authentication, (user) => {
-    //         if (user) {
-    //             // navigation.navigate('ProfileLogedIn');
-    //         }
-    //     });
-    //     return unsubscribe
-    // }, [])
-
     // OnChangeText function for textfields 
     const handleOnChangeText = (value,fieldName)=> {
         setUserInfo({...userInfo,[fieldName]:value})
@@ -110,7 +100,6 @@ const SignUpScreen = ({navigation,onPress}) => {
         <>
             <View style={styles.container}>
                 <StatusBar backgroundColor={Colors.white} barStyle="dark-content" />
-
 
                 <View style={styles.backNav}>
                     <Ionicons
