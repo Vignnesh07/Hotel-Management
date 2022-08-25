@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {ScrollView, Text, StyleSheet, ImageBackground, StatusBar, View} from 'react-native';
+import {ScrollView, Text, StyleSheet, ImageBackground, StatusBar, View, TouchableOpacity, SafeAreaView} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -9,102 +9,112 @@ const HotelDetailScreen = ({navigation, route}) => {
     const item = route.params;
     console.log(item);
     return(
-        <ScrollView 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-                backgroundColor: Colors.white,
-                paddingBottom: 20,
-            }}>
-            <StatusBar
-                barStyle="light-content"
-                translucent
-                backgroundColor="rgba(0, 0, 0, 0)"
-            />
-            <ImageBackground 
-                style={styles.desImage}
-                source={item.image}
-            >    
-                <View style={styles.backBookNav}>
-                <Ionicons
-                    name="chevron-back-sharp"
-                    size={35}
-                    color={Colors.backBook}
-                    onPress={navigation.goBack}
-                />
-                <Ionicons name="bookmark-outline" size={28} color={Colors.backBook} />
-                </View>
-            </ImageBackground>
+        <SafeAreaView>
             <View>
-                <View style={styles.iconContainer}>
-                    <Icon name="place" color={Colors.white} size={35} />
-                </View>
-                <View style={{marginTop: 20, paddingHorizontal: 20}}>
-                    <Text style={{fontSize: 23, fontWeight: 'bold', color: 'black'}}>{item.name}</Text>
-                    <Text
-                        style={{
-                            fontSize: 15,
-                            fontWeight: '400',
-                            color: Colors.grey,
-                            marginTop: 5,
-                        }}>
-                        {item.location}
-                    </Text>
+                <StatusBar
+                    barStyle="dark-content"
+                    backgroundColor={Colors.white}
+                 />
+            </View>
 
-                    <View
-                        style={{
-                            marginTop: 10,
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                        }}>
-                        <View style={{flexDirection: 'row'}}>
+            <ScrollView 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                    backgroundColor: Colors.white,
+                    paddingBottom: 20,
+                }}>
+            
+
+                <ImageBackground 
+                    style={styles.desImage}
+                    source={item.image}
+                >    
+                    <View style={styles.backBookNav}>
+                    <Ionicons
+                        name="chevron-back-sharp"
+                        size={40}
+                        color={Colors.backBook}
+                        onPress={navigation.goBack}
+                    />
+                    <Ionicons name="bookmark-outline" size={32} color={Colors.backBook} />
+                    </View>
+                </ImageBackground>
+                <View>
+                    <View style={styles.iconContainer}>
+                        <Icon name="place" color={Colors.white} size={35} />
+                    </View>
+                    <View style={{marginTop: 20, paddingHorizontal: 20}}>
+                        <Text style={{fontSize: 23, fontWeight: 'bold', color: 'black'}}>{item.name}</Text>
+                        <Text
+                            style={{
+                                fontSize: 15,
+                                fontWeight: '400',
+                                color: Colors.grey,
+                                marginTop: 5,
+                            }}>
+                            {item.location}
+                        </Text>
+
+                        <View
+                            style={{
+                                marginTop: 10,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                            }}>
                             <View style={{flexDirection: 'row'}}>
-                                <Ionicons name="star" size={20} color={Colors.orange} />
-                                <Ionicons name="star" size={20} color={Colors.orange} />
-                                <Ionicons name="star" size={20} color={Colors.orange} />
-                                <Ionicons name="star" size={20} color={Colors.orange} />
-                                <Ionicons name="star" size={20} color={Colors.grey} />
+                                <View style={{flexDirection: 'row'}}>
+                                    <Ionicons name="star" size={20} color={Colors.orange} />
+                                    <Ionicons name="star" size={20} color={Colors.orange} />
+                                    <Ionicons name="star" size={20} color={Colors.orange} />
+                                    <Ionicons name="star" size={20} color={Colors.orange} />
+                                    <Ionicons name="star" size={20} color={Colors.grey} />
+                                </View>
+                                <Text style={{fontWeight: 'bold', fontSize: 18, marginLeft: 5}}> 4.0 </Text>
                             </View>
-                            <Text style={{fontWeight: 'bold', fontSize: 18, marginLeft: 5}}> 4.0 </Text>
+                            <Text style={{fontSize: 13, color: Colors.grey}}>2729 reviews</Text>
                         </View>
-                        <Text style={{fontSize: 13, color: Colors.grey}}>2729 reviews</Text>
+                        <View>
+                            <Text style={{lineHeight: 20, color: Colors.grey, textAlign: 'justify'}}>{item.details}</Text>
+                        </View>
+                    </View>
+                    <View style={{
+                        marginTop: 20,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        paddingLeft: 20,
+                        alignItems: 'center',
+                    }}>
+                        <Text style={{fontSize: 20, fontWeight: 'bold', color: 'black'}}>Price Per Night</Text>
+                        <View style={styles.priceTag}>
+                        <Text
+                        style={{
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            color: '#15456b',
+                            marginLeft: 5,
+                        }}>RM{item.price}
+                        </Text>
+                        <Text
+                        style={{
+                            fontSize: 13,
+                            fontWeight: 'bold',
+                            color: '#15456b',
+                            marginLeft: 5,
+                        }}>+breakfast
+                        </Text>
+
+                        </View>
                     </View>
                     <View>
-                        <Text style={{lineHeight: 20, color: Colors.grey, textAlign: 'justify'}}>{item.details}</Text>
+                        <TouchableOpacity onPress = {() => navigation.navigate('BookNow', item)}>
+                            <View style={styles.bookButton}>
+                                <Text style={{color: Colors.white, fontSize: 18, fontWeight: 'bold'}}>Book Now</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
-                <View style={{
-                    marginTop: 20,
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    paddingLeft: 20,
-                    alignItems: 'center',
-                }}>
-                    <Text style={{fontSize: 20, fontWeight: 'bold', color: 'black'}}>Price Per Night</Text>
-                    <View style={styles.priceTag}>
-                    <Text
-                    style={{
-                        fontSize: 16,
-                        fontWeight: 'bold',
-                        color: '#15456b',
-                        marginLeft: 5,
-                    }}>RM{item.price}
-                    </Text>
-                    <Text
-                    style={{
-                        fontSize: 13,
-                        fontWeight: 'bold',
-                        color: '#15456b',
-                        marginLeft: 5,
-                    }}>+breakfast
-                    </Text>
-
-                    </View>
-                </View>
-                <View style={styles.bookButton}>
-                    <Text style={{color: Colors.white, fontSize: 18, fontWeight: 'bold'}}>Book Now</Text>
-                </View>
-            </View>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 
@@ -118,7 +128,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     backBookNav:{
-        marginTop: 35,
+        marginTop: 25,
         flexDirection: 'row',
         alignItems: 'center',
         marginHorizontal: 20,

@@ -94,7 +94,7 @@ const ProfileLogedInScreen = ({navigation}) => {
                     </View>
                 </View>
                 <View>
-                    <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('ProfileStack')}>
                         <Text style={{ 
                                     fontSize:20, 
                                     marginTop: 80,
