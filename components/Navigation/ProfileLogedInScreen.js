@@ -29,22 +29,23 @@ const ProfileLogedInScreen = ({navigation}) => {
 
     // Retrieves user data once uid has been set
     useEffect(() => {
+        // Function to retrieve user data from Firestore
+        const getUserData = async () => {
+            const userQuery = query(collection(firebaseDB, "users"), where("uid", "==", uid));
+            const querySnapshot = await getDocs(userQuery);
+            querySnapshot.forEach((doc) => {
+                setUserData({
+                    name: doc.data().name,
+                    email: doc.data().email,
+                    phoneNo: doc.data().phoneNo,
+                });
+            });
+        }
         getUserData();
         setLoader(false);
     }, [uid]);
 
-    // Function to retrieve user data from Firestore
-    const getUserData = async () => {
-        const userQuery = query(collection(firebaseDB, "users"), where("uid", "==", uid));
-        const querySnapshot = await getDocs(userQuery);
-        querySnapshot.forEach((doc) => {
-            setUserData({
-                name: doc.data().name,
-                email: doc.data().email,
-                phoneNo: doc.data().phoneNo,
-            });
-        });
-    }
+    
 
     // Function to logout user
     const logOut = () => {
@@ -58,7 +59,7 @@ const ProfileLogedInScreen = ({navigation}) => {
         sendEmailVerification(authentication.currentUser)
         .then(() => {
             setLoader(false);
-            setOverlayText("Successfully sent verification link to your email. Please login to cocntinue");
+            setOverlayText("Successfully sent verification link to your email");
             setpopUpErr(false);
             setIsVisible(true);
         })

@@ -22,7 +22,7 @@ const HotelDetailScreen = ({navigation, route}) => {
             />
             <ImageBackground 
                 style={styles.desImage}
-                source={item.image}
+                source={{uri: item.image}}
             >    
                 <View style={styles.backBookNav}>
                 <Ionicons

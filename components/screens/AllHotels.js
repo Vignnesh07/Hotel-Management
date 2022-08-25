@@ -4,7 +4,6 @@ import { FlatList, ScrollView, TextInput } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import Colors from '../const/color'
-import Hotels from '../const/hotel'
 
 const rows = 3;
 const cols = 2;
@@ -49,7 +48,7 @@ const AllHotels = ({navigation, route}) => {
                                     <Ionicons name="star" size={15} color={Colors.orange} />
                                     <Text style={{color: Colors.white, fontWeight: 'bold', fontSize: 15}}>4.6</Text>
                                 </View>
-                                <Image style={styles.hotelImageStyle} source={item.image} />
+                                <Image style={styles.hotelImageStyle} source={{uri: item.image}} />
                                 <View style={{paddingVertical: 5, paddingHorizontal:10,}}>
                                     <Text style={{fontSize: 15, fontWeight: 'bold',}}>{item.name}</Text>
                                     <Text style={{fontSize: 11, color: Colors.grey,}}>{item.location}</Text>

@@ -1,50 +1,54 @@
-import React, {Component, useState, useRef, componentDidMount} from 'react';
-import {StyleSheet, Animated, SafeAreaView, Text, Image, View, TouchableOpacity, Dimensions, Button} from 'react-native';
-import { FlatList, ScrollView, TextInput } from 'react-native-gesture-handler';
+import React, {Component, useState, useRef, useEffect, } from 'react';
+import {StyleSheet, Animated, SafeAreaView, Text, Image, View, TouchableOpacity, Dimensions, Button, } from 'react-native';
+import { FlatList, ScrollView, TextInput, } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { collection, getDocs } from 'firebase/firestore/lite';
 
 import Colors from '../const/color'
-import Hotels from '../const/hotel'
 import { firebaseDB } from '../../firebase/firebase-config';
 
 const {width} = Dimensions.get('screen');
 const holderWidth = width / 1.8;
 
-const HomeScreen = ({navigation}) => {
+function HomeScreen ({navigation}) {
     const categories = ['All', 'Popular', 'Best Selling', 'Featured', 'Luxury'];
     const [selectedCategory, setSelectedCategory] = useState('All');
-    const [dataList, setDataList] = useState(Hotels);
     const [activeCard, setActiveCard] = React.useState(0);
     const scrollHolder = useRef(new Animated.Value(0)).current;
+    const [dataList, setDataList] = useState([]);
+    const [sortedDataList, setSortedDataList] = useState([]);
+    const hotelsCollectionRef = collection(firebaseDB, "hotels");
 
-    // Function to retrieve data from Firestore
-    const query = async () => {
-        const hotelsCollection = collection(firebaseDB, 'hotels');
-        const hotelSnapshot = await getDocs(hotelsCollection);
-        const hotelList = hotelSnapshot.docs.map(doc => doc.data());
-    }
+    useEffect(() => {
+        // Function to retrieve hotel data from Firestore
+        const getHotelsData = async () => {
+            const hotelSnapshot = await getDocs(hotelsCollectionRef);
+            setDataList(hotelSnapshot.docs.map((doc) => ({ ...doc.data() })));
+            setSortedDataList(hotelSnapshot.docs.map((doc) => ({ ...doc.data() })));
+        };
 
-    query();
-
+        getHotelsData();
+    }, []);
+    
     // Function to update screen based on selected categories
     const setCategory = selectedCategory => {
         console.log(selectedCategory);
         if (selectedCategory !== 0)
-            setDataList([...Hotels.filter(e => e.category === categories[selectedCategory])])
+            setSortedDataList(dataList.filter(e => e.category === categories[selectedCategory]))
+
         else 
-            setDataList(Hotels)
+            setSortedDataList(dataList)
             
         setSelectedCategory(selectedCategory)
     }
 
     // Search function that displays hotels based on hotel name
     const search = (input) => {
-        let searchedData = Hotels.filter(e => e.name.toLowerCase().includes(input.toLowerCase()))
-        setDataList(searchedData)
+        let searchedData = dataList.filter(e => e.name.toLowerCase().includes(input.toLowerCase()))
+        setSortedDataList(searchedData)
 
         if (input === '')
-            setDataList(Hotels)
+            setSortedDataList(dataList)
     }
 
     // Function that displays the row of categories
@@ -86,12 +90,11 @@ const HomeScreen = ({navigation}) => {
 
     // Function to display the top row of hotels 
     const Holder =({hotel, index}) => {
-
         const inputRange = [
             (index - 1) * holderWidth,
             index * holderWidth,
             (index + 1) * holderWidth,
-          ];
+        ];
         const opacity = scrollHolder.interpolate({
             inputRange,
             outputRange: [0.7, 0, 0.7],
@@ -111,7 +114,7 @@ const HomeScreen = ({navigation}) => {
                     <View style={styles.priceHolder}>
                         <Text style={{color: Colors.priceTagFont, fontSize:15, fontWeight:'bold'}}>RM{hotel.price}</Text>
                     </View>
-                    <Image source={hotel.image} style={styles.holderImage}/>
+                    <Image source={{uri: hotel.image}} style={styles.holderImage}/>
                     <View style={styles.holderDetails}>
 
                         <View style={{flexDirection: 'row', justifyContent:'space-between'}}>
@@ -160,7 +163,7 @@ const HomeScreen = ({navigation}) => {
                     <Text style={{color: Colors.white, fontWeight: 'bold', fontSize: 15}}>4.6</Text>
                 </View>
                 
-                <Image style={styles.popularImage} source={hotel.image} />
+                <Image style={styles.popularImage} source={{uri: hotel.image}} />
                 <View style={{paddingVertical: 5, paddingHorizontal:10}}>
                     <Text style={{fontSize: 11, fontWeight: 'bold'}}>{hotel.name}</Text>
                     <Text style={{fontSize: 8, color: Colors.grey}}>{hotel.location}</Text>
@@ -214,7 +217,7 @@ const HomeScreen = ({navigation}) => {
                             {useNativeDriver: true},
                         )}
                         horizontal
-                        data={dataList}
+                        data={sortedDataList}
                         contentContainerStyle={{paddingVertical: 30, paddingLeft: 20, paddingRight: holderWidth / 2 - 50,}}
                         showsHorizontalScrollIndicator={false}
                         renderItem={({item, index}) => <Holder hotel={item} index={index} />}
@@ -229,7 +232,7 @@ const HomeScreen = ({navigation}) => {
                     marginHorizontal: 20,
                 }}>
                     <Text style={{fontWeight: 'bold', color: "black"}}> Near You </Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('AllHotels', Hotels)}>
+                    <TouchableOpacity onPress={() => navigation.navigate('AllHotels', dataList)}>
                         <Text style={{ color: "black"}}> Show All </Text> 
                     </TouchableOpacity>
                 </View>
@@ -238,7 +241,7 @@ const HomeScreen = ({navigation}) => {
                 <FlatList 
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    data={Hotels}
+                    data={dataList}
                     contentContainerStyle={{
                         marginTop: 20,
                         paddingLeft: 20,
