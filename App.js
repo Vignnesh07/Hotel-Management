@@ -81,8 +81,6 @@ function ProfileStackScreen(){
 }
 
 
-
-
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
