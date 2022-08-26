@@ -1,5 +1,5 @@
 import React, {Component, useState, useRef} from 'react';
-import {StyleSheet, Appbar, SafeAreaView, Text, Image, View, TouchableOpacity, Dimensions, Button, StatusBar} from 'react-native';
+import { StyleSheet, Appbar, SafeAreaView, Text, Image, View, TouchableOpacity, Dimensions, Button, StatusBar } from 'react-native';
 import { FlatList, ScrollView, TextInput } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 

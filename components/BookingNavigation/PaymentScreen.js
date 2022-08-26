@@ -32,7 +32,7 @@ const PaymentScreen = ({navigation, route}) => {
     useEffect(() => {
         setPrice(parseInt(hotel.price) * dayCounter);
 
-        // Function to create database table if does not exists
+        // Function to create bookings database table if does not exists
         const createTable = async () => {
             await db.transaction(tx => {
                 tx.executeSql(

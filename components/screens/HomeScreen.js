@@ -108,7 +108,7 @@ function HomeScreen ({navigation}) {
             <TouchableOpacity
                 activeOpacity={1}
                 disabled={activeCard != index}
-                onPress={() => navigation.navigate('HotelDetail', hotel)}>
+                onPress={() => navigation.navigate('HotelDetail', {hotel: hotel})}>
                 <Animated.View style={{...styles.holderStyle, transform:[{scale}]}}>
                     <Animated.View style={{...styles.holderOverlay, opacity}} />
                     <View style={styles.priceHolder}>
@@ -122,7 +122,6 @@ function HomeScreen ({navigation}) {
                                 <Text style={{fontWeight:'bold', fontSize:15}}>{hotel.name}</Text>
                                 <Text style={{color: Colors.grey, fontSize:12}}>{hotel.location}</Text>
                             </View>
-                            <Ionicons name='bookmark-outline' size={25} color={Colors.primary}  />
                         </View>
 
                         <View 

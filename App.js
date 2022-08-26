@@ -17,18 +17,20 @@ import BookNowScreen from './components/BookingNavigation/BookNowScreen';
 import PaymentScreen from './components/BookingNavigation/PaymentScreen';
 import CompletedBookingScreen from './components/BookingNavigation/CompletedBookingScreen';
 import CancelBookingScreen from './components/BookingNavigation/CancelBookingScreen';
+import UpdateBookingScreen from './components/BookingNavigation/UpdateBookingScreen';
 
 import 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import React, {Component, useState, useEffect} from 'react';
-import {StatusBar, Text, Dimensions} from 'react-native';
-import {NavigationContainer, getFocusedRouteNameFromRoute} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { StatusBar, Text, Dimensions } from 'react-native';
+import { NavigationContainer, getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { onAuthStateChanged } from "firebase/auth";
-import {LogBox} from 'react-native';
+import { LogBox } from 'react-native';
 import { and } from 'react-native-reanimated';
+import { openDatabase } from 'react-native-sqlite-storage';
 
 LogBox.ignoreLogs (['EventEmitter.removeListener']);
 
@@ -120,6 +122,10 @@ function TopTabsFunction(){
   );
 }
 
+const db = openDatabase({
+  name: "hotel_booking", 
+  location: 'default'
+});
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -132,6 +138,24 @@ const App = () => {
       else
         setIsLoggedIn(false);
     });
+
+    // Function to create favourites database table if does not exists
+    const createTable = () => {
+      db.transaction(tx => {
+          tx.executeSql(
+              'CREATE TABLE IF NOT EXISTS favourites (id INTEGER PRIMARY KEY AUTOINCREMENT, userID VARCHAR(20), hotelID VARCHAR(20))',
+              [],
+              (sqlTxn, res) => {
+                console.log("Table created successfully");
+              },
+              error => {
+                console.log("Error creating table: " + error.message);
+              },
+          );
+      });
+    };
+
+    createTable();
   })
 
   return (

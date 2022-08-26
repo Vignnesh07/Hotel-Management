@@ -4,27 +4,134 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { onAuthStateChanged } from "firebase/auth";
 import { Overlay } from "@rneui/base";
+import { openDatabase } from 'react-native-sqlite-storage';
 
 import FormSuccess from "../shared/formSuccess";
-import { authentication } from '../../firebase/firebase-config';
-import Colors from '../const/color'
+import { authentication,  } from '../../firebase/firebase-config';
+import Colors from '../const/color';
+
+const db = openDatabase({
+    name: "hotel_booking", 
+    location: 'default'
+});
 
 const HotelDetailScreen = ({navigation, route}) => {
 
-    const hotel = route.params;
+    const hotel = route.params.hotel;
+    const [favourites, setFavourites] = useState([]);
+    const [isVisible, setIsVisible] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [OverlayText, setOverlayText] = useState("");
     const [popUpErr, setpopUpErr] = useState(false);
 
-    // Listens to auth changes 
     useEffect(() => { 
+
+        // Listens to auth changes to enable favourites function
         onAuthStateChanged(authentication, (user) => {
-        if (user) 
-            setIsLoggedIn(true);
-        else
-            setIsLoggedIn(false);
+            if (user) 
+                setIsLoggedIn(true);
+            else
+                setIsLoggedIn(false);
         });
-    })
+
+        
+        getFavouriteHotels();
+    }, []);
+
+    // Function snippet to check if hotel exists in favourites
+    const checkHotel = element => element.hotelID === hotel.id;
+
+    // Function to retrieve favourites hotel
+    const getFavouriteHotels = async () => {
+        if (isLoggedIn) {
+            await db.transaction(tx => {
+                tx.executeSql(
+                    'SELECT * FROM favourites WHERE userID=? AND hotelID=?',
+                    [authentication.currentUser.uid, hotel.id],
+                    (sqlTxn, res) => {
+                        console.log("Retrieved data successfully");
+    
+                        let len = res.rows.length;
+    
+                        if (len > 0) {
+                            console.log("Got data");
+                            let results = [];
+                            for (let i = 0; i < len; i++) {
+                                let item = res.rows.item(i);
+                                results.push({ id: item.id, userID: item.userID, hotelID: item.hotelID });
+                            }
+                            setFavourites(prev => ([...prev, ...results]));
+                            console.log(favourites);
+                        }
+
+                        else {
+                            console.log("No data");
+                            setFavourites([]);
+                            console.log(favourites);
+                        }
+                    },
+                    error => {
+                        console.log("Error retrieving data from table: " + error.message);
+                    },
+                );
+            });
+        }
+    };
+
+    // Function to add hotels to user favourites
+    const addToFavourites = () => {
+        console.log(authentication.currentUser.uid);
+        if (isLoggedIn) {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'INSERT INTO favourites (userID, hotelID) VALUES (?, ?)',
+                    [authentication.currentUser.uid, hotel.id],
+                    (sqlTxn, res) => {
+                        console.log("Inserted data into table successfully");
+                        getFavouriteHotels();
+                    },
+                    error => {
+                        console.log("Error inserting data into table: " + error.message);
+                        setOverlayText(error.message);
+                        setpopUpErr(true);
+                        setIsVisible(true);
+                    },
+                );
+            });
+            setOverlayText("Added to favourites!");
+            setpopUpErr(false);
+            setIsVisible(true);
+        }
+        else {
+            setOverlayText("Please sign-in to add hotels to favourites");
+            setpopUpErr(true);
+        }
+    };
+
+    // Function to remove hotels from user favourites
+    const removeFromFavourites = async () => {
+        console.log(authentication.currentUser.uid);
+        await db.transaction(tx => {
+            tx.executeSql(
+                'DELETE FROM favourites WHERE hotelID=?',
+                [hotel.id],
+                (sqlTxn, res) => {
+                    console.log("Removed from table successfully");
+                    getFavouriteHotels();
+                },
+                error => {
+                    console.log("Error removing data from table: " + error.message);
+                    setOverlayText(error.message);
+                    setpopUpErr(true);
+                    setIsVisible(true);
+                },
+            );
+        });
+        setOverlayText("Added to favourites!");
+        setpopUpErr(false);
+        setIsVisible(true);
+        console.log(favourites);
+    };
 
     // Function to handle booking logic - if signed-in, then proceed
     const canBook = () => {
@@ -35,7 +142,7 @@ const HotelDetailScreen = ({navigation, route}) => {
             setOverlayText("Please sign-in to place a booking");
             setpopUpErr(true);
         }
-    }
+    };
 
     return(
         <SafeAreaView>
@@ -54,10 +161,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                 }}>
             
 
-                <ImageBackground 
-                    style={styles.desImage}
-                    source={{uri: hotel.image}}
-                >    
+                <ImageBackground  style={styles.desImage} source={{uri: hotel.image}} >    
                     <View style={styles.backBookNav}>
                     <Ionicons
                         name="chevron-back-sharp"
@@ -65,9 +169,19 @@ const HotelDetailScreen = ({navigation, route}) => {
                         color={Colors.backBook}
                         onPress={navigation.goBack}
                     />
-                    <Ionicons name="bookmark-outline" size={32} color={Colors.backBook} />
+                    {
+                        favourites.some(checkHotel) ? 
+                        (
+                            <Ionicons name="bookmark" size={32} color={Colors.primary} onPress={removeFromFavourites}/>
+                        )
+                        :
+                        (
+                            <Ionicons name="bookmark-outline" size={32} color={Colors.backBook} onPress={addToFavourites}/>
+                        )
+                    }
                     </View>
                 </ImageBackground>
+
                 <View>
                     <View style={styles.iconContainer}>
                         <Icon name="place" color={Colors.white} size={35} />
@@ -143,7 +257,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                     </View>
                 </View>
 
-                <Overlay isVisible={popUpErr} overlayStyle={{backgroundColor: "white", borderColor: "white", borderRadius: 20}} onBackdropPress={() => setpopUpErr(false)}>
+                <Overlay isVisible={isVisible} overlayStyle={{backgroundColor: "white", borderColor: "white", borderRadius: 20}} onBackdropPress={() => setIsVisible(false)}>
                     <FormSuccess errorBtn={() => setpopUpErr(false)} text={OverlayText} error={popUpErr} />
                 </Overlay>
             </ScrollView>
