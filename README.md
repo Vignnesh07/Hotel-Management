@@ -27,3 +27,8 @@ In order to run the provided solution the following software will need to be ins
 The repository contains a `App.js` file inside the root folder; this should be the starting point for the application. Please feel free to create more components to structure the app in a logical manner.
 
 The repository also contains an API key connected to Firebase used for authentication and cloud storage.
+
+
+## Conclusion
+
+This project was built for the purpose of fulfilling the UECS 3253 Wireless Application Development requirements. Contributions are welcomed :)
