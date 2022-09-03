@@ -1,43 +1,46 @@
-import React, { Component, useState, useEffect } from "react";
-import { SafeAreaView, Text, View, StyleSheet, Image, FlatList, TouchableOpacity, } from "react-native";
+import React, { Component, useEffect } from "react";
+import { SafeAreaView, Text, View, StyleSheet, Image, TouchableOpacity, } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { ScrollView } from "react-native-gesture-handler";
 import { openDatabase } from 'react-native-sqlite-storage';
+import { useSelector, useDispatch } from 'react-redux';
 
-import { authentication } from '../../firebase/firebase-config';
+import { setBookings } from "../app/bookings";
 import { Modal } from "../components/modal";
 import Colors from '../const/color'
 
 const db = openDatabase({
     name: "hotel_booking", 
     location: 'default'
-})
+});
 
 const BookingScreen = ({navigation, route}) => {
     
-    const hotel = route.params;
-    const [bookings, setBookings] = useState([]);
+    const { bookings } = useSelector((state) => state.bookings);
+    const dispatch = useDispatch();
+    // const [bookings, setBookings] = useState([]);
 
     useEffect(() => {
-        // Function to retrieve booking details
-        const getBookedHotels = async () => {
-            await db.transaction(tx => {
+        getBookedHotels();
+    }, []);
+
+    // Function to retrieve booking details
+    const getBookedHotels = () => {
+        try {
+            db.transaction((tx) => {
                 tx.executeSql(
-                    'SELECT * FROM bookings WHERE userID=?',
-                    [authentication.currentUser.uid],
+                    "SELECT * FROM bookings",
+                    [],
                     (sqlTxn, res) => {
-                        console.log("Retrieved data successfully");
-
                         let len = res.rows.length;
-
                         if (len > 0) {
                             console.log("Got data");
                             let results = [];
                             for (let i = 0; i < len; i++) {
                                 let item = res.rows.item(i);
-                                results.push({ id: item.id, userID: item.userID, hotelName: item.hotelName, hotelLocation: item.hotelLocation, hotelImage: item.hotelImage, startDate: item.startDate, duration: item.duration, adults: item.adults, child: item.child });
+                                results.push({ id: item.id, userID: item.userID, hotelName: item.hotelName, hotelLocation: item.hotelLocation, hotelImage: item.hotelImage, startDate: item.startDate, duration: item.duration, adults: item.adults, child: item.child, price: item.price });
                             }
-                            setBookings(results);
+                            dispatch(setBookings(results));
                         }
                     },
                     error => {
@@ -45,16 +48,18 @@ const BookingScreen = ({navigation, route}) => {
                     },
                 );
             });
+        } catch (error) {
+            console.log(error);
         }
+    };
 
-        getBookedHotels();
-    }, []);
+    console.log("Bookings screen bookings: " + bookings);
 
     // Function to render retrieved data
     const RenderBookings = ({ data }) => {
         return (
             <>
-                <TouchableOpacity key={data.id} activeOpacity={1} onPress={navigation.navigate('Update', {hotel: data})}> 
+                <TouchableOpacity key={data.id} activeOpacity={1} onPress={() => navigation.navigate('BookNow', {hotel: data, isUpdate: true})}> 
                     <View style={styles.mainBox}>
                         <View style={{flexDirection:'column'}}>
 
@@ -130,26 +135,25 @@ const BookingScreen = ({navigation, route}) => {
 
     return(
         <SafeAreaView style={styles.container}>
-            <View>
-                <Text style={{ 
-                    fontSize:25,  
-                    alignSelf: 'center',
-                    marginTop:10, 
-                    marginBottom:5, 
-                    color: 'black', 
-                    fontWeight: 'bold'}}>Bookings
-                </Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
                 <View>
-                    <Text style={styles.line}> ───────────────────────────────────────── </Text>
-                </View>
+                    <Text style={{ 
+                        fontSize:25,  
+                        alignSelf: 'center',
+                        marginTop:10, 
+                        marginBottom:5, 
+                        color: 'black', 
+                        fontWeight: 'bold'}}>Bookings
+                    </Text>
+                    <View>
+                        <Text style={styles.line}> ───────────────────────────────────────── </Text>
+                    </View>
 
-                <FlatList 
-                    data = {bookings} 
-                    vertical
-                    showsVerticalScrollIndicator = {false}
-                    renderItem = {({item}) => <RenderBookings data={item} /> }
-                />   
-            </View>
+                    {bookings.map((item, index) => {
+                        return <RenderBookings key={index} data={item} />
+                    })}
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };

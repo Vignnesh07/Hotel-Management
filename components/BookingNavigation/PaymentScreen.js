@@ -5,7 +5,9 @@ import { RadioButton } from 'react-native-paper';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Overlay } from "@rneui/base";
 import { openDatabase } from 'react-native-sqlite-storage';
+import { useSelector, useDispatch } from 'react-redux';
 
+import { setBookings } from "../app/bookings";
 import { authentication } from '../../firebase/firebase-config';
 import FormSuccess from "../shared/formSuccess";
 import Colors from '../const/color';
@@ -23,54 +25,64 @@ const PaymentScreen = ({navigation, route}) => {
     const adultCounter = route.params.adultCounter;
     const childCounter = route.params.childCounter;
 
-    const [amount, setPrice] = useState(0);
+    const [amount, setAmount] = useState(0);
     const [value, setValue] = React.useState('visa');
     const [isVisible, setIsVisible] = useState(false);
     const [OverlayText, setOverlayText] = useState("");
     const [popUpErr, setpopUpErr] = useState(false);
 
-    useEffect(() => {
-        setPrice(parseInt(hotel.price) * dayCounter);
+    const { bookings } = useSelector(state => state.bookings);
+    const dispatch = useDispatch();
 
-        // Function to create bookings database table if does not exists
-        const createTable = async () => {
-            await db.transaction(tx => {
+    useEffect(() => {
+        setAmount(parseInt(hotel.price) * dayCounter);
+    }, []);
+
+    // Function to store the booking details and navigate user to booking page
+    const bookNow = () => {
+        try {
+            db.transaction(tx => {
                 tx.executeSql(
-                    'CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, userID VARCHAR(20), hotelName VARCHAR(20), hotelLocation VARCHAR(20), hotelImage VARCHAR(20), startDate VARCHAR(20), duration INTEGER, adults INTEGER, child INTEGER)',
+                    'INSERT INTO bookings (userID, hotelName, hotelLocation, hotelImage, startDate, duration, adults, child, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [authentication.currentUser.uid, hotel.name, hotel.location, hotel.image, startDate, dayCounter, adultCounter, childCounter, amount],
+                    (sqlTxn, res) => {
+                        console.log("Inserted booking data into table successfully");
+                    },
+                    error => {
+                        console.log("Error inserting data into table: " + error.message);
+                        setOverlayText(error.message);
+                        setpopUpErr(true);
+                        setIsVisible(true);
+                    }, 
+                );
+            });
+            db.transaction((tx) => {
+                tx.executeSql(
+                    'SELECT * FROM bookings',
                     [],
                     (sqlTxn, res) => {
-                        console.log("Table created successfully");
+                        let len = res.rows.length;
+                        if (len > 0) {
+                            console.log("Got data");
+                            let results = [];
+                            for (let i = 0; i < len; i++) {
+                                let item = res.rows.item(i);
+                                results.push({ id: item.id, userID: item.userID, hotelName: item.hotelName, hotelLocation: item.hotelLocation, hotelImage: item.hotelImage, startDate: item.startDate, duration: item.duration, adults: item.adults, child: item.child, price: item.price });
+                            }
+                            dispatch(setBookings(results));
+                            setOverlayText("Booking successful!");
+                            setpopUpErr(false);
+                            setIsVisible(true);
+                        }
                     },
                     error => {
                         console.log("Error creating table: " + error.message);
                     },
                 );
             });
-        };
-
-        createTable();
-    }, []);
-
-    // Function to store the booking details and navigate user to booking page
-    const bookNow = () => {
-        db.transaction(tx => {
-            tx.executeSql(
-                'INSERT INTO bookings (userID, hotelName, hotelLocation, hotelImage, startDate, duration, adults, child) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [authentication.currentUser.uid, hotel.name, hotel.location, hotel.image, startDate, dayCounter, adultCounter, childCounter],
-                (sqlTxn, res) => {
-                    console.log("Inserted data into table successfully");
-                    setOverlayText("Booking successful!");
-                    setpopUpErr(false);
-                    setIsVisible(true);
-                },
-                error => {
-                    console.log("Error inserting data into table: " + error.message);
-                    setOverlayText(error.message);
-                    setpopUpErr(true);
-                    setIsVisible(true);
-                },
-            );
-        });
+        } catch (error) {
+            console.log(error);
+        }
     };
         
     return(      
@@ -126,7 +138,7 @@ const PaymentScreen = ({navigation, route}) => {
 
             {/* Overlay for successful or unsuccessful booking */}
             <Overlay isVisible={isVisible} overlayStyle={{backgroundColor: "white", borderColor: "white", borderRadius: 20}} onBackdropPress={() => setIsVisible(false)}>
-                <FormSuccess errorBtn={() => setIsVisible(false)} successBtn={() => setIsVisible(false)} text={OverlayText} error={popUpErr} />
+                <FormSuccess errorBtn={() => setIsVisible(false)} successBtn={() => navigation.navigate('Upcoming')} text={OverlayText} error={popUpErr} />
             </Overlay>
 
         </SafeAreaView>

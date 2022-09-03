@@ -1,5 +1,6 @@
 import Colors from './components/const/color';
 import { authentication } from './firebase/firebase-config';
+import { Store } from './components/app/store';
 
 import HomeScreen from './components/screens/HomeScreen';
 import BookingScreen from './components/screens/BookingScreen';
@@ -31,6 +32,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { LogBox } from 'react-native';
 import { and } from 'react-native-reanimated';
 import { openDatabase } from 'react-native-sqlite-storage';
+import { Provider } from 'react-redux';
 
 LogBox.ignoreLogs (['EventEmitter.removeListener']);
 
@@ -40,6 +42,10 @@ const Tab = createBottomTabNavigator();
 const TopTabs = createMaterialTopTabNavigator();
 const fullScreenWidth = Dimensions.get('window').width
 
+const db = openDatabase({
+  name: "hotel_booking", 
+  location: 'default'
+});
 
 function ProfileStackScreen(){
   return(
@@ -102,10 +108,11 @@ function HomeStackScreen(){
   );
 }
 
+function TopTabsFunction() {
+  const userUid = authentication.currentUser.uid;
 
-function TopTabsFunction(){
   return(
-    <TopTabs.Navigator screenOptions={{headerShown:false}} >
+    <TopTabs.Navigator initialRouteName='Upcoming' screenOptions={{headerShown:false}} >
       <TopTabs.Screen 
           name="Upcoming" 
           component={BookingScreen} 
@@ -122,31 +129,19 @@ function TopTabsFunction(){
   );
 }
 
-const db = openDatabase({
-  name: "hotel_booking", 
-  location: 'default'
-});
-
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [uid, setUid] = useState("");
 
-  // Listens to auth changes 
-  useEffect(() => { 
-    onAuthStateChanged(authentication, (user) => {
-      if (user) 
-        setIsLoggedIn(true);
-      else
-        setIsLoggedIn(false);
-    });
-
+  useEffect(() => {
     // Function to create favourites database table if does not exists
-    const createTable = () => {
+    const createFavouritesTable = () => {
       db.transaction(tx => {
           tx.executeSql(
               'CREATE TABLE IF NOT EXISTS favourites (id INTEGER PRIMARY KEY AUTOINCREMENT, userID VARCHAR(20), hotelID VARCHAR(20))',
               [],
               (sqlTxn, res) => {
-                console.log("Table created successfully");
+                console.log("Favourites table created successfully");
               },
               error => {
                 console.log("Error creating table: " + error.message);
@@ -155,78 +150,145 @@ const App = () => {
       });
     };
 
-    createTable();
-  })
+    // Function to create bookings database table if does not exists
+    const createBookingsTable = () => {
+      db.transaction(tx => {
+          tx.executeSql(
+              'CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, userID VARCHAR(20), hotelName VARCHAR(20), hotelLocation VARCHAR(20), hotelImage VARCHAR(20), startDate VARCHAR(20), duration INTEGER, adults INTEGER, child INTEGER, price INTEGER)',
+              [],
+              (sqlTxn, res) => {
+                  console.log("Bookings table created successfully");
+              },
+              error => {
+                  console.log("Error creating table: " + error.message);
+              },
+          );
+      });
+    };
+
+    // Function to create cancelled bookings database table if does not exists
+    const createCancelledTable = () => {
+      db.transaction(tx => {
+          tx.executeSql(
+              'CREATE TABLE IF NOT EXISTS cancelled (id INTEGER PRIMARY KEY AUTOINCREMENT, userID VARCHAR(20), hotelName VARCHAR(20), hotelLocation VARCHAR(20), hotelImage VARCHAR(20), startDate VARCHAR(20), duration INTEGER, adults INTEGER, child INTEGER, price INTEGER)',
+              [],
+              (sqlTxn, res) => {
+                  console.log("Cancelled table created successfully");
+              },
+              error => {
+                  console.log("Error creating table: " + error.message);
+              },
+          );
+      });
+    };
+
+    // Function to create completed bookings database table if does not exists
+    const createCompletedTable = () => {
+      db.transaction(tx => {
+          tx.executeSql(
+              'CREATE TABLE IF NOT EXISTS completed (id INTEGER PRIMARY KEY AUTOINCREMENT, userID VARCHAR(20), hotelName VARCHAR(20), hotelLocation VARCHAR(20), hotelImage VARCHAR(20), startDate VARCHAR(20), duration INTEGER, adults INTEGER, child INTEGER, price INTEGER)',
+              [],
+              (sqlTxn, res) => {
+                console.log("Completed table created successfully");
+              },
+              error => {
+                console.log("Error creating table: " + error.message);
+              },
+          );
+      });
+    };
+
+    createCompletedTable();
+    createCancelledTable();
+    createBookingsTable();
+    createFavouritesTable();
+  }, [])
+  
+
+  // Listens to auth changes 
+  useEffect(() => { 
+    onAuthStateChanged(authentication, (user) => {
+      if (user) 
+      {
+        setIsLoggedIn(true);
+        setUid(user.uid);
+      }
+      else
+      {
+        setIsLoggedIn(false);
+      }
+    });
+  },[])
 
   return (
-    <NavigationContainer >
-      <StatusBar backgroundColor={Colors.white} barStyle="dark-content" />
-      <Tab.Navigator
-        initialRouteName={'HomeStack'}
-        screenOptions={({route}) => ({
-          tabBarActiveTintColor: "#1e9fe9",
-          tabBarInactiveTintColor: "black",
-          tabBarLabelStyle:{
-            fontSize: 12,
-            marginBottom: 19
-          },
-          headerShown: false,
-          tabBarHideOnKeyboard: true,
-          tabBarStyle:{
-            height:80,
-          },
-          tabBarIcon: ({focused, color, size, padding}) => {
-            let iconName;
-            if (route.name === 'Home'){
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Bookings') {
-              iconName = focused ? 'book' : 'book-outline';
-            } else if (route.name === 'Wishlists') {
-              iconName = focused ? 'bookmarks' : 'bookmarks-outline';
-            } else if (route.name === 'Profile') {
-              iconName = focused ? 'person-circle' : 'person-circle-outline';
-            }
-            
-            return ( 
-              <Ionicons 
-                name={iconName}
-                size={size}
-                color={color}
-                style={{paddingBottom: padding, marginBottom: 10, marginTop: 10}} 
-              />
-            );
-          },
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeStackScreen} options={({route}) => ({
-            tabBarStyle: ((route) => {
-              const routeName = getFocusedRouteNameFromRoute(route) ?? ""
-              console.log(routeName)
-              if (routeName === 'BookNow') {
-                return { display: "none" }
-              }else{
-                return { height: 80}
+    <Provider store={Store}>
+      <NavigationContainer >
+        <StatusBar backgroundColor={Colors.white} barStyle="dark-content" />
+        <Tab.Navigator
+          initialRouteName={'Home'}
+          screenOptions={({route}) => ({
+            tabBarActiveTintColor: "#1e9fe9",
+            tabBarInactiveTintColor: "black",
+            tabBarLabelStyle:{
+              fontSize: 12,
+              marginBottom: 19
+            },
+            headerShown: false,
+            tabBarHideOnKeyboard: true,
+            tabBarStyle:{
+              height:80,
+            },
+            tabBarIcon: ({focused, color, size, padding}) => {
+              let iconName;
+              if (route.name === 'Home'){
+                iconName = focused ? 'home' : 'home-outline';
+              } else if (route.name === 'Bookings') {
+                iconName = focused ? 'book' : 'book-outline';
+              } else if (route.name === 'Wishlists') {
+                iconName = focused ? 'bookmarks' : 'bookmarks-outline';
+              } else if (route.name === 'Profile') {
+                iconName = focused ? 'person-circle' : 'person-circle-outline';
               }
-            })(route),
-          })} 
-        />
-        <Tab.Screen name="Bookings" component={TopTabsFunction} />
-        <Tab.Screen name="Wishlists" component={WishlistScreen} />
-        <Tab.Screen name="Profile" component={ isLoggedIn ? ProfileLogedInScreen : ProfileStackScreen }
-          options={({ route}) => ({
-            tabBarStyle: ((route) => {
-              const routeName = getFocusedRouteNameFromRoute(route) ?? ""
-              console.log(routeName)
-              if (routeName === 'LogIn' || routeName === 'SignUp' || routeName === 'Forgot') {
-                return { display: "none" }
-              }else{
-                return { height: 80}
-              }
-            })(route),
+              
+              return ( 
+                <Ionicons 
+                  name={iconName}
+                  size={size}
+                  color={color}
+                  style={{paddingBottom: padding, marginBottom: 10, marginTop: 10}} 
+                />
+              );
+            },
           })}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+        >
+          <Tab.Screen name="Home" component={HomeStackScreen} options={({route}) => ({
+              tabBarStyle: ((route) => {
+                const routeName = getFocusedRouteNameFromRoute(route) ?? ""
+                if (routeName === 'BookNow') {
+                  return { display: "none" }
+                }else{
+                  return { height: 80}
+                }
+              })(route),
+            })} 
+          />
+          <Tab.Screen name="Bookings" component={isLoggedIn ? TopTabsFunction : ProfileStackScreen} />
+          <Tab.Screen name="Wishlists" component={WishlistScreen} />
+          <Tab.Screen name="Profile" component={ isLoggedIn ? ProfileLogedInScreen : ProfileStackScreen }
+            options={({ route}) => ({
+              tabBarStyle: ((route) => {
+                const routeName = getFocusedRouteNameFromRoute(route) ?? ""
+                if (routeName === 'LogIn' || routeName === 'SignUp' || routeName === 'Forgot') {
+                  return { display: "none" }
+                }else{
+                  return { height: 80}
+                }
+              })(route),
+            })}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 }
 

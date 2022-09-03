@@ -28,7 +28,7 @@ const HotelDetailScreen = ({navigation, route}) => {
 
         // Listens to auth changes to enable favourites function
         onAuthStateChanged(authentication, (user) => {
-            if (user) 
+            if (user != null) 
                 setIsLoggedIn(true);
             else
                 setIsLoggedIn(false);
@@ -136,11 +136,12 @@ const HotelDetailScreen = ({navigation, route}) => {
     // Function to handle booking logic - if signed-in, then proceed
     const canBook = () => {
         if (isLoggedIn) {
-            navigation.navigate('BookNow', hotel)
+            navigation.navigate('BookNow', {hotel: hotel, isUpdate: false});
         }
         else {
             setOverlayText("Please sign-in to place a booking");
             setpopUpErr(true);
+            setIsVisible(true);
         }
     };
 
@@ -258,7 +259,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                 </View>
 
                 <Overlay isVisible={isVisible} overlayStyle={{backgroundColor: "white", borderColor: "white", borderRadius: 20}} onBackdropPress={() => setIsVisible(false)}>
-                    <FormSuccess errorBtn={() => setpopUpErr(false)} text={OverlayText} error={popUpErr} />
+                    <FormSuccess successBtn={() => setIsVisible(false)} errorBtn={() => setIsVisible(false)} text={OverlayText} error={popUpErr} />
                 </Overlay>
             </ScrollView>
         </SafeAreaView>
