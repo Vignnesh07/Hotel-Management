@@ -5,7 +5,7 @@ import { RadioButton } from 'react-native-paper';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Overlay } from "@rneui/base";
 import { openDatabase } from 'react-native-sqlite-storage';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 import { setBookings } from "../app/bookings";
 import { authentication } from '../../firebase/firebase-config';
@@ -31,7 +31,7 @@ const PaymentScreen = ({navigation, route}) => {
     const [OverlayText, setOverlayText] = useState("");
     const [popUpErr, setpopUpErr] = useState(false);
 
-    const { bookings } = useSelector(state => state.bookings);
+    // const { bookings } = useSelector(state => state.bookings);
     const dispatch = useDispatch();
 
     useEffect(() => {

@@ -1,15 +1,16 @@
 import React, { Component, useState } from "react";
 import { ImageBackground, SafeAreaView, Text, View, StyleSheet, Dimensions, TouchableOpacity, StatusBar, Image, useWindowDimensions, TextBase, TouchableNativeFeedback, Button, Platform } from "react-native";
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { ScrollView, TextInput } from "react-native-gesture-handler";
-import { color } from "react-native-reanimated";
-import { useNavigate } from 'react-router-dom';
+import { ScrollView } from "react-native-gesture-handler";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import CounterInput from "react-native-counters";
 import { openDatabase } from 'react-native-sqlite-storage';
 import { Overlay } from "@rneui/base";
+import { useDispatch } from 'react-redux';
 
+import { setBookings } from "../app/bookings";
+import { setCompletedBookings } from "../app/completed";
+import { setCancelledBookings } from "../app/cancelled";
 import FormSuccess from "../shared/formSuccess";
 import Colors from '../const/color'
 import { Modal } from "./modal";
@@ -21,17 +22,26 @@ const db = openDatabase({
 
 const BookNowScreen = ({navigation, route}) => {
 
+    // Parameter isUpdate   => identifies if user clicks fron BookingScreen page 
+    // Parameter hotel      => obtains the specific hotel information (which was selected by user)
     const isUpdate = route.params.isUpdate; 
     const hotel = route.params.hotel; 
 
+    // To update application state upon successful CRUD operations
+    const dispatch = useDispatch();
+
+    // To display overlay text box (for successful/failed operations)
     const [isVisible, setIsVisible] = useState(false);
     const [OverlayText, setOverlayText] = useState("");
     const [popUpErr, setpopUpErr] = useState(false);
 
+    // Pop-up to enable users to select date and guests
     const [isModalVisible, setIsModalVisible] = React.useState(false);
     const [startDate, setStartDate] = useState(new Date());
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
+    // Values retrieved from previous page (if isUpdate === true) OR
+    // Reset values (if isUpdate === false)
     const [startText, setStartText] = useState(isUpdate ? hotel.startDate : 'Start Date');
     const [dayCounter, setDayText] = useState(isUpdate ? hotel.duration : 0);
     const [adultCounter, setAdultText] = useState(isUpdate ? hotel.adults : 0);
@@ -62,43 +72,179 @@ const BookNowScreen = ({navigation, route}) => {
 
     // Function to delete hotel from bookings table and save to completed table
     const completed = () => {
-        db.transaction(tx => {
-            tx.executeSql(
-                'INSERT INTO completed (userID, hotelName, hotelLocation, hotelImage, startDate, duration, adults, child, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [hotel.userId, hotel.hotelName, hotel.hotelLocation, hotel.hotelImage, hotel.startDate, hotel.duration, hotel.adults, hotel.child, hotel.price],
-                (sqlTxn, res) => {
-                    deleted();
-                    console.log("Inserted data from completed table successfully");
-                },
-                error => {
-                    console.log("Error deleting data from table: " + error.message);
-                    setOverlayText(error.message);
-                    setpopUpErr(true);
-                    setIsVisible(true);
-                }, 
-            );
-        });
+        try {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'INSERT INTO completed (userID, hotelName, hotelLocation, hotelImage, startDate, duration, adults, child, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [hotel.userId, hotel.hotelName, hotel.hotelLocation, hotel.hotelImage, hotel.startDate, hotel.duration, hotel.adults, hotel.child, hotel.price],
+                    (sqlTxn, res) => {
+                        console.log("Inserted data from completed table successfully");
+                        db.transaction(tx => {
+                            tx.executeSql(
+                                'DELETE FROM bookings WHERE id=?',
+                                [hotel.id],
+                                (sqlTxn, res) => {
+                                    console.log("Deleted data from bookings table successfully");
+                                    updateBookedHotels();
+                                    updateCompletedHotels();
+                                    setOverlayText("Thank you for your stay!");
+                                    setpopUpErr(false);
+                                    setIsVisible(true);
+                                },
+                                error => {
+                                    console.log("Error deleting data from table: " + error.message);
+                                    setOverlayText(error.message);
+                                    setpopUpErr(true);
+                                    setIsVisible(true);
+                                }, 
+                            );
+                        });
+                    },
+                    error => {
+                        console.log("Error deleting data from table: " + error.message);
+                        setOverlayText(error.message);
+                        setpopUpErr(true);
+                        setIsVisible(true);
+                    }, 
+                );
+            });
+        } catch (error) {
+            console.log(error);
+        }
     };
 
-    const deleted = () => {
-        db.transaction(tx => {
-            tx.executeSql(
-                'DELETE FROM bookings WHERE id=?',
-                [hotel.id],
-                (sqlTxn, res) => {
-                    console.log("Deleted data from bookings table successfully");
-                    setOverlayText("Thank you for your stay!");
-                    setpopUpErr(false);
-                    setIsVisible(true);
-                },
-                error => {
-                    console.log("Error deleting data from table: " + error.message);
-                    setOverlayText(error.message);
-                    setpopUpErr(true);
-                    setIsVisible(true);
-                }, 
-            );
-        });
+    // Function to delete hotel from bookings table and save to cancelled table
+    const cancel = () => {
+        try {
+            db.transaction(tx => {
+                tx.executeSql(
+                    'INSERT INTO cancelled (userID, hotelName, hotelLocation, hotelImage, startDate, duration, adults, child, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [hotel.userId, hotel.hotelName, hotel.hotelLocation, hotel.hotelImage, hotel.startDate, hotel.duration, hotel.adults, hotel.child, hotel.price],
+                    (sqlTxn, res) => {
+                        console.log("Inserted data to cancelled table successfully");
+                        db.transaction(tx => {
+                            tx.executeSql(
+                                'DELETE FROM bookings WHERE id=?',
+                                [hotel.id],
+                                (sqlTxn, res) => {
+                                    console.log("Deleted data from bookings table successfully");
+                                    updateBookedHotels();
+                                    updateCancelledHotels();
+                                    setOverlayText("Sorry to see you leave!");
+                                    setpopUpErr(false);
+                                    setIsVisible(true);
+                                },
+                                error => {
+                                    console.log("Error deleting data from table: " + error.message);
+                                    setOverlayText(error.message);
+                                    setpopUpErr(true);
+                                    setIsVisible(true);
+                                }, 
+                            );
+                        });
+                    },
+                    error => {
+                        console.log("Error deleting data from table: " + error.message);
+                        setOverlayText(error.message);
+                        setpopUpErr(true);
+                        setIsVisible(true);
+                    }, 
+                );
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // Function to update completed hotels list upon successful CRUD uperations
+    const updateCompletedHotels = () => {
+        try {
+            db.transaction((tx) => {
+                tx.executeSql(
+                    "SELECT * FROM completed",
+                    [],
+                    (sqlTxn, res) => {
+                        let len = res.rows.length;
+                        if (len > 0) {
+                            console.log("Got data");
+                            let results = [];
+                            for (let i = 0; i < len; i++) {
+                                let item = res.rows.item(i);
+                                results.push({ id: item.id, userID: item.userID, hotelName: item.hotelName, hotelLocation: item.hotelLocation, hotelImage: item.hotelImage, startDate: item.startDate, duration: item.duration, adults: item.adults, child: item.child, price: item.price });
+                            }
+                            dispatch(setCompletedBookings(results));
+                        }
+                    },
+                    error => {
+                        console.log("Error reading from table: " + error.message);
+                    },
+                );
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // Function to update booking list upon successful CRUD uperations
+    const updateBookedHotels = () => {
+        try {
+            db.transaction((tx) => {
+                tx.executeSql(
+                    "SELECT * FROM bookings",
+                    [],
+                    (sqlTxn, res) => {
+                        let len = res.rows.length;
+                        if (len > 0) {
+                            console.log("Got data");
+                            let results = [];
+                            for (let i = 0; i < len; i++) {
+                                let item = res.rows.item(i);
+                                results.push({ id: item.id, userID: item.userID, hotelName: item.hotelName, hotelLocation: item.hotelLocation, hotelImage: item.hotelImage, startDate: item.startDate, duration: item.duration, adults: item.adults, child: item.child, price: item.price });
+                            }
+                            console.log(len);
+                            dispatch(setBookings(results));
+                        }
+                        else {
+                            dispatch(setBookings([]));
+                        }
+                    },
+                    error => {
+                        console.log("Error creating table: " + error.message);
+                    },
+                );
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    // Function to update cancelled hotels list upon successful CRUD uperations
+    const updateCancelledHotels = () => {
+        try {
+            db.transaction((tx) => {
+                tx.executeSql(
+                    "SELECT * FROM cancelled",
+                    [],
+                    (sqlTxn, res) => {
+                        let len = res.rows.length;
+                        if (len > 0) {
+                            console.log("Got data");
+                            let results = [];
+                            for (let i = 0; i < len; i++) {
+                                let item = res.rows.item(i);
+                                results.push({ id: item.id, userID: item.userID, hotelName: item.hotelName, hotelLocation: item.hotelLocation, hotelImage: item.hotelImage, startDate: item.startDate, duration: item.duration, adults: item.adults, child: item.child, price: item.price });
+                            }
+                            dispatch(setCancelledBookings(results));
+                        }
+                    },
+                    error => {
+                        console.log("Error reading from table: " + error.message);
+                    },
+                );
+            });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     return(
@@ -297,7 +443,7 @@ const BookNowScreen = ({navigation, route}) => {
                         {/* Proceeds to payment page */}
                         {
                             isUpdate ? 
-                            <View>
+                            <View> 
                                 <TouchableOpacity onPress={completed}>
                                     <View style={{height: 55, justifyContent: 'center', alignItems: 'center', marginTop: 25, backgroundColor: 'green',
                                         marginHorizontal: 20, borderRadius: 15}}
@@ -305,7 +451,7 @@ const BookNowScreen = ({navigation, route}) => {
                                         <Text style={{color: Colors.white, fontSize: 18, fontWeight: 'bold'}}>Completed</Text>
                                     </View>
                                 </TouchableOpacity>
-                                <TouchableOpacity>
+                                <TouchableOpacity onPress={cancel}>
                                     <View style={{height: 55, justifyContent: 'center', alignItems: 'center', marginTop: 15, backgroundColor: 'red',
                                         marginHorizontal: 20, borderRadius: 15, marginBottom: 30,}}>
                                         <Text style={{color: Colors.white, fontSize: 18, fontWeight: 'bold'}}>Cancel</Text>
@@ -326,7 +472,7 @@ const BookNowScreen = ({navigation, route}) => {
 
                         {/* Overlay for successful or unsuccessful booking */}
                         <Overlay isVisible={isVisible} overlayStyle={{backgroundColor: "white", borderColor: "white", borderRadius: 20}} onBackdropPress={() => setIsVisible(false)}>
-                            <FormSuccess errorBtn={() => setIsVisible(false)} successBtn={() => setIsVisible(false)} text={OverlayText} error={popUpErr} />
+                            <FormSuccess errorBtn={() => setIsVisible(false)} successBtn={() => navigation.navigate('Upcoming')} text={OverlayText} error={popUpErr} />
                         </Overlay>
                     </View>
                 </ScrollView>

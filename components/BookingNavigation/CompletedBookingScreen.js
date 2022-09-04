@@ -1,11 +1,13 @@
-import React, { Component, useState, useEffect } from "react";
+import React, { Component, useEffect } from "react";
 import { SafeAreaView, Text, View, StyleSheet, Image, TouchableOpacity, } from "react-native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { ScrollView } from "react-native-gesture-handler";
 import { openDatabase } from 'react-native-sqlite-storage';
+import { useSelector, useDispatch } from 'react-redux';
 
+import { setCompletedBookings } from "../app/completed";
 import { Modal } from "../components/modal";
-import Colors from '../const/color'
+import Colors from '../const/color';
 
 const db = openDatabase({
     name: "hotel_booking", 
@@ -14,14 +16,19 @@ const db = openDatabase({
 
 const CompletedBookingScreen = ({navigation, route}) =>{
 
-    const [bookings, setBookings] = useState([]);
+    const { completed } = useSelector((state) => state.completed);
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        // Function to retrieve completed booking details
-        const getCompletedHotels = () => {
+        getCompletedHotels();
+    }, []);
+
+    // Function to retrieve completed booking details
+    const getCompletedHotels = () => {
+        try {
             db.transaction((tx) => {
                 tx.executeSql(
-                    'SELECT * FROM completed',
+                    "SELECT * FROM completed",
                     [],
                     (sqlTxn, res) => {
                         let len = res.rows.length;
@@ -32,7 +39,7 @@ const CompletedBookingScreen = ({navigation, route}) =>{
                                 let item = res.rows.item(i);
                                 results.push({ id: item.id, userID: item.userID, hotelName: item.hotelName, hotelLocation: item.hotelLocation, hotelImage: item.hotelImage, startDate: item.startDate, duration: item.duration, adults: item.adults, child: item.child, price: item.price });
                             }
-                            setBookings(results);
+                            dispatch(setCompletedBookings(results));
                         }
                     },
                     error => {
@@ -40,112 +47,111 @@ const CompletedBookingScreen = ({navigation, route}) =>{
                     },
                 );
             });
-        };
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-        getCompletedHotels();
-    }, []);
-
-    console.log("Completed screen bookings: " + bookings);
+    console.log("Completed screen bookings: " + completed);
 
     // Function to render retrieved data
     const RenderBookings = ({ data }) => {
         return (
-                <TouchableOpacity key={data.id} activeOpacity={1} > 
-                    <View style={styles.mainBox}>
-                        <View style={{flexDirection:'column'}}>
+            <TouchableOpacity key={data.id} activeOpacity={1} > 
+                <View style={styles.mainBox}>
+                    <View style={{flexDirection:'column'}}>
 
-                            {/* Hotel details */}
-                            <View style={{flexDirection:'row', margin:15}}>
-                                <Image 
-                                    style={styles.popularImage}
-                                    source={{uri: data.hotelImage}}
-                                />
-                                <View style={{flexDirection:'column', marginTop: 30, marginLeft: 20}}> 
-                                    <Text style={{
-                                        fontSize: 20, 
-                                        fontWeight: 'bold', 
-                                        color:'black',
-                                        }}> {data.hotelName} </Text> 
+                        {/* Hotel details */}
+                        <View style={{flexDirection:'row', margin:15}}>
+                            <Image 
+                                style={styles.popularImage}
+                                source={{uri: data.hotelImage}}
+                            />
+                            <View style={{flexDirection:'column', marginTop: 30, marginLeft: 20}}> 
+                                <Text style={{
+                                    fontSize: 20, 
+                                    fontWeight: 'bold', 
+                                    color:'black',
+                                    }}> {data.hotelName} </Text> 
 
-                                    <Text style={{
-                                        fontSize: 15,  
-                                        color:'black',
-                                        paddingLeft: 2,
-                                        marginTop: 15,
-                                        }}> {data.hotelLocation} </Text> 
-                                </View>
-                            </View>
-
-                            <Text style={styles.line}> ────────────────────────────────────── </Text>
-
-                            {/* Booking details */}
-                            <View style={styles.verticalBox}>
-                                <View style={{flexDirection:'column', marginLeft: 10, marginRight: 10, alignItems: 'center'}}>
-                                    <Text style={{fontSize:15, }}> Start Date </Text>
-                                    <Text style={{fontSize:20, fontWeight: 'bold', }}> {data.startDate} </Text>
-                                </View>
-
-                                <View style={styles.verticleLine}></View>
-
-                                <View style={{flexDirection:'column', marginLeft: 10, marginRight: 10, alignItems: 'center'}}>
-                                    <Text style={{fontSize:15, }}> Stay Duration </Text>
-                                    <Text style={{fontSize:20, fontWeight: 'bold', }}> {data.duration} </Text>
-                                </View>
-
-                                <View style={styles.verticleLine}></View>
-
-                                <View style={{flexDirection:'column', marginLeft: 10, marginRight: 10, alignItems: 'center'}}>
-                                    <Text style={{fontSize:15, }}> Adult </Text>
-                                    <Text style={{fontSize:20, fontWeight: 'bold', }}> {data.adults} </Text>
-                                </View>
-
-                                <View style={styles.verticleLine}></View>
-
-                                <View style={{flexDirection:'column', marginLeft: 10, marginRight: 10, alignItems: 'center'}}>
-                                    <Text style={{fontSize:15, }}> Children </Text>
-                                    <Text style={{fontSize:20, fontWeight: 'bold', }}> {data.child} </Text>
-                                </View>
-                            </View>
-
-                            {/* Additional info */}
-                            <Text style={styles.line}> ────────────────────────────────────── </Text>
-                            <View style={{flexDirection:'row', paddingLeft:20, paddingTop: 5}} >
-                                <Ionicons name="create" size={25} color={Colors.primary} />
-                                <Text style={{fontSize: 18, paddingLeft: 20, color: Colors.primary}}> Tap to update </Text>
+                                <Text style={{
+                                    fontSize: 15,  
+                                    color:'black',
+                                    paddingLeft: 2,
+                                    marginTop: 15,
+                                    }}> {data.hotelLocation} </Text> 
                             </View>
                         </View>
-                    </View>
 
-                    <View>
-                        <Text style={{textAlign: 'center', color: "#e0e0e0", marginTop: 5}}> ────────────────────────────────────── </Text>
+                        <Text style={styles.line}> ────────────────────────────────────── </Text>
+
+                        {/* Booking details */}
+                        <View style={styles.verticalBox}>
+                            <View style={{flexDirection:'column', marginLeft: 10, marginRight: 10, alignItems: 'center'}}>
+                                <Text style={{fontSize:15, }}> Start Date </Text>
+                                <Text style={{fontSize:20, fontWeight: 'bold', }}> {data.startDate} </Text>
+                            </View>
+
+                            <View style={styles.verticleLine}></View>
+
+                            <View style={{flexDirection:'column', marginLeft: 10, marginRight: 10, alignItems: 'center'}}>
+                                <Text style={{fontSize:15, }}> Stay Duration </Text>
+                                <Text style={{fontSize:20, fontWeight: 'bold', }}> {data.duration} </Text>
+                            </View>
+
+                            <View style={styles.verticleLine}></View>
+
+                            <View style={{flexDirection:'column', marginLeft: 10, marginRight: 10, alignItems: 'center'}}>
+                                <Text style={{fontSize:15, }}> Adult </Text>
+                                <Text style={{fontSize:20, fontWeight: 'bold', }}> {data.adults} </Text>
+                            </View>
+
+                            <View style={styles.verticleLine}></View>
+
+                            <View style={{flexDirection:'column', marginLeft: 10, marginRight: 10, alignItems: 'center'}}>
+                                <Text style={{fontSize:15, }}> Children </Text>
+                                <Text style={{fontSize:20, fontWeight: 'bold', }}> {data.child} </Text>
+                            </View>
+                        </View>
+
+                        {/* Additional info */}
+                        <Text style={styles.line}> ────────────────────────────────────── </Text>
+                        <View style={{flexDirection:'row', paddingLeft:20, paddingTop: 5,}} >
+                            <Ionicons name="checkmark-circle" size={25} color={Colors.primary} />
+                            <Text style={{fontSize: 18, paddingLeft: 20, color: Colors.primary, paddingBottom: 5,}}> Completed </Text>
+                        </View>
                     </View>
-                </TouchableOpacity>
-            
+                </View>
+
+                <View>
+                    <Text style={{textAlign: 'center', color: "#e0e0e0", marginTop: 5}}> ────────────────────────────────────── </Text>
+                </View>
+            </TouchableOpacity>
         );
     };
     
 
     return(
         <SafeAreaView style={styles.container}>
-            <View>
-                <Text style={{ 
-                    fontSize:25,  
-                    alignSelf: 'center',
-                    marginTop:10, 
-                    marginBottom:5, 
-                    color: 'black', 
-                    fontWeight: 'bold'}}>Bookings
-                </Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
                 <View>
-                    <Text style={styles.line}> ───────────────────────────────────────── </Text>
-                </View>
+                    <Text style={{ 
+                        fontSize:25,  
+                        alignSelf: 'center',
+                        marginTop:10, 
+                        marginBottom:5, 
+                        color: 'black', 
+                        fontWeight: 'bold'}}>Completed Bookings
+                    </Text>
+                    <View>
+                        <Text style={styles.line}> ───────────────────────────────────────── </Text>
+                    </View>
 
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    {bookings.map((item, index) => {
+                    {completed.map((item, index) => {
                         return <RenderBookings key={index} data={item} />
                     })}
-                </ScrollView>
-            </View>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };
@@ -169,7 +175,7 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         marginRight: 10,
         marginTop: 5,
-        height:355,
+        height:300,
         borderRadius: 15,
     },
     verticalBox: {
