@@ -109,8 +109,6 @@ function HomeStackScreen(){
 }
 
 function TopTabsFunction() {
-  const userUid = authentication.currentUser.uid;
-
   return(
     <TopTabs.Navigator initialRouteName='Upcoming' screenOptions={{headerShown:false}} >
       <TopTabs.Screen 
@@ -138,7 +136,7 @@ const App = () => {
     const createFavouritesTable = () => {
       db.transaction(tx => {
           tx.executeSql(
-              'CREATE TABLE IF NOT EXISTS favourites (id INTEGER PRIMARY KEY AUTOINCREMENT, userID VARCHAR(20), hotelID VARCHAR(20))',
+              'CREATE TABLE IF NOT EXISTS favourites (id INTEGER PRIMARY KEY AUTOINCREMENT, hotelID VARCHAR(20), hotelName VARCHAR(20), hotelLocation VARCHAR(20), hotelImage VARCHAR(20), hotelPrice INTEGER, hotelDetails VARCHAR(20))',
               [],
               (sqlTxn, res) => {
                 console.log("Favourites table created successfully");
@@ -272,7 +270,7 @@ const App = () => {
               })(route),
             })} 
           />
-          <Tab.Screen name="Bookings" component={isLoggedIn ? TopTabsFunction : ProfileStackScreen} />
+          <Tab.Screen name="Bookings" component={ isLoggedIn ? TopTabsFunction : ProfileStackScreen } />
           <Tab.Screen name="Wishlists" component={WishlistScreen} />
           <Tab.Screen name="Profile" component={ isLoggedIn ? ProfileLogedInScreen : ProfileStackScreen }
             options={({ route}) => ({

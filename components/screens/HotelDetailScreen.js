@@ -9,7 +9,7 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { setWishlist } from "../app/wishlist";
 import FormSuccess from "../shared/formSuccess";
-import { authentication,  } from '../../firebase/firebase-config';
+import { authentication } from '../../firebase/firebase-config';
 import Colors from '../const/color';
 
 const db = openDatabase({
@@ -27,11 +27,9 @@ const HotelDetailScreen = ({navigation, route}) => {
 
     // 'wishlist' array from redux store 
     const { wishlist } = useSelector((state) => state.wishlist);
-    // const [wishlists, setFavourites] = useState([]);
 
-    // Boolean value to enable user bookings/save hotel only if logged in
+    // Boolean value to enable user to book hotels only if logged in
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [isFavourite, setIsFavourite] = useState(false);
 
     // To display overlay text box (for successful/failed operations)
     const [isVisible, setIsVisible] = useState(false);
@@ -56,47 +54,46 @@ const HotelDetailScreen = ({navigation, route}) => {
     // Function to retrieve wishlist
     const getWishlist = () => {
         try {
-            if (isLoggedIn) {
-                db.transaction(tx => {
-                    tx.executeSql(
-                        "SELECT * FROM favourites",
-                        [],
-                        (sqlTxn, res) => {
-                            let len = res.rows.length;
+            db.transaction(tx => {
+                tx.executeSql(
+                    "SELECT * FROM favourites",
+                    [],
+                    (sqlTxn, res) => {
+                        let len = res.rows.length;
 
-                            console.log("Retrieved data successfully. Length: " + len);
-        
-                            if (len > 0) {
-                                let results = [];
-                                for (let i = 0; i < len; i++) {
-                                    let item = res.rows.item(i);
-                                    results.push({ id: item.id, userID: item.userID, hotelID: item.hotelID });
-                                }
-                                dispatch(setWishlist(results));
+                        console.log("Retrieved data successfully. Length: " + len);
+    
+                        if (len > 0) {
+                            let results = [];
+                            for (let i = 0; i < len; i++) {
+                                let item = res.rows.item(i);
+                                results.push({ id: item.id, hotelID: item.hotelID, name: item.hotelName, location: item.hotelLocation, image: item.hotelImage, price: item.hotelPrice, details: item.hotelDetails });
                             }
+                            dispatch(setWishlist(results));
+                        }
 
-                            else{
-                                dispatch(setWishlist([]));
-                            }
-                        },
-                        error => {
-                            console.log("Error retrieving data from table: " + error.message);
-                        },
-                    );
-                });
-            }
+                        else{
+                            dispatch(setWishlist([]));
+                        }
+                    },
+                    error => {
+                        console.log("Error retrieving data from table: " + error.message);
+                    },
+                );
+            });
         } catch (error) {
             console.log(error);
         }
     };
 
-    // Function to add hotels to user favourites
-    const addToFavourites = () => {
-        if (isLoggedIn) {
+    // Function to add hotels to wishlist
+    const addToWishlist = () => {
+        try {
             db.transaction(tx => {
+                console.log('working');
                 tx.executeSql(
-                    'INSERT INTO favourites (userID, hotelID) VALUES (?, ?)',
-                    [authentication.currentUser.uid, hotel.id],
+                    "INSERT INTO favourites (hotelID, hotelName, hotelLocation, hotelImage, hotelPrice, hotelDetails) VALUES (?, ?, ?, ?, ?, ?)",
+                    [hotel.id, hotel.name, hotel.location, hotel.image, hotel.price, hotel.details],
                     (sqlTxn, res) => {
                         console.log("Inserted data into table successfully");
                         getWishlist();
@@ -112,16 +109,13 @@ const HotelDetailScreen = ({navigation, route}) => {
                     },
                 );
             });
-        }
-        else {
-            setOverlayText("Please sign-in to add hotels to favourites");
-            setpopUpErr(true);
+        } catch (error) {
+            console.log(error);
         }
     };
 
     // Function to remove hotels from user favourites
     const removeFromFavourites = () => {
-        console.log(authentication.currentUser.uid);
         db.transaction(tx => {
             tx.executeSql(
                 'DELETE FROM favourites WHERE hotelID=?',
@@ -188,7 +182,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                         )
                         :
                         (
-                            <Ionicons name="bookmark-outline" size={32} color={Colors.backBook} onPress={addToFavourites}/>
+                            <Ionicons name="bookmark-outline" size={32} color={Colors.backBook} onPress={addToWishlist}/>
                         )
                     }
                     </View>
@@ -303,8 +297,8 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
-      },
-      priceTag: {
+    },
+    priceTag: {
         height: 40,
         alignItems: 'center',
         marginLeft: 40,
@@ -314,8 +308,8 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
         borderBottomLeftRadius: 20,
         flexDirection: 'row',
-      },
-      bookButton: {
+    },
+    bookButton: {
         height: 55,
         justifyContent: 'center',
         alignItems: 'center',
@@ -323,9 +317,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.primary,
         marginHorizontal: 20,
         borderRadius: 15,
-      },
-
-
+    },
 })
 
 export default HotelDetailScreen;
