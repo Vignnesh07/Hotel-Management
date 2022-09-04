@@ -5,7 +5,9 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { onAuthStateChanged } from "firebase/auth";
 import { Overlay } from "@rneui/base";
 import { openDatabase } from 'react-native-sqlite-storage';
+import { useSelector, useDispatch } from 'react-redux';
 
+import { setWishlist } from "../app/wishlist";
 import FormSuccess from "../shared/formSuccess";
 import { authentication,  } from '../../firebase/firebase-config';
 import Colors from '../const/color';
@@ -17,70 +19,79 @@ const db = openDatabase({
 
 const HotelDetailScreen = ({navigation, route}) => {
 
+    // Parameter hotel      => obtains the specific hotel information (which was selected by user)
     const hotel = route.params.hotel;
-    const [favourites, setFavourites] = useState([]);
-    const [isVisible, setIsVisible] = useState(false);
+
+    // To update application state upon successful CRUD operations
+    const dispatch = useDispatch();
+
+    // 'wishlist' array from redux store 
+    const { wishlist } = useSelector((state) => state.wishlist);
+    // const [wishlists, setFavourites] = useState([]);
+
+    // Boolean value to enable user bookings/save hotel only if logged in
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isFavourite, setIsFavourite] = useState(false);
+
+    // To display overlay text box (for successful/failed operations)
+    const [isVisible, setIsVisible] = useState(false);
     const [OverlayText, setOverlayText] = useState("");
     const [popUpErr, setpopUpErr] = useState(false);
 
     useEffect(() => { 
-
-        // Listens to auth changes to enable favourites function
+        // Listens to auth changes to allow user to add hotels to wishlist
         onAuthStateChanged(authentication, (user) => {
             if (user != null) 
                 setIsLoggedIn(true);
             else
                 setIsLoggedIn(false);
         });
-
         
-        getFavouriteHotels();
+        getWishlist();
     }, []);
 
     // Function snippet to check if hotel exists in favourites
     const checkHotel = element => element.hotelID === hotel.id;
 
-    // Function to retrieve favourites hotel
-    const getFavouriteHotels = async () => {
-        if (isLoggedIn) {
-            await db.transaction(tx => {
-                tx.executeSql(
-                    'SELECT * FROM favourites WHERE userID=? AND hotelID=?',
-                    [authentication.currentUser.uid, hotel.id],
-                    (sqlTxn, res) => {
-                        console.log("Retrieved data successfully");
-    
-                        let len = res.rows.length;
-    
-                        if (len > 0) {
-                            console.log("Got data");
-                            let results = [];
-                            for (let i = 0; i < len; i++) {
-                                let item = res.rows.item(i);
-                                results.push({ id: item.id, userID: item.userID, hotelID: item.hotelID });
-                            }
-                            setFavourites(prev => ([...prev, ...results]));
-                            console.log(favourites);
-                        }
+    // Function to retrieve wishlist
+    const getWishlist = () => {
+        try {
+            if (isLoggedIn) {
+                db.transaction(tx => {
+                    tx.executeSql(
+                        "SELECT * FROM favourites",
+                        [],
+                        (sqlTxn, res) => {
+                            let len = res.rows.length;
 
-                        else {
-                            console.log("No data");
-                            setFavourites([]);
-                            console.log(favourites);
-                        }
-                    },
-                    error => {
-                        console.log("Error retrieving data from table: " + error.message);
-                    },
-                );
-            });
+                            console.log("Retrieved data successfully. Length: " + len);
+        
+                            if (len > 0) {
+                                let results = [];
+                                for (let i = 0; i < len; i++) {
+                                    let item = res.rows.item(i);
+                                    results.push({ id: item.id, userID: item.userID, hotelID: item.hotelID });
+                                }
+                                dispatch(setWishlist(results));
+                            }
+
+                            else{
+                                dispatch(setWishlist([]));
+                            }
+                        },
+                        error => {
+                            console.log("Error retrieving data from table: " + error.message);
+                        },
+                    );
+                });
+            }
+        } catch (error) {
+            console.log(error);
         }
     };
 
     // Function to add hotels to user favourites
     const addToFavourites = () => {
-        console.log(authentication.currentUser.uid);
         if (isLoggedIn) {
             db.transaction(tx => {
                 tx.executeSql(
@@ -88,7 +99,10 @@ const HotelDetailScreen = ({navigation, route}) => {
                     [authentication.currentUser.uid, hotel.id],
                     (sqlTxn, res) => {
                         console.log("Inserted data into table successfully");
-                        getFavouriteHotels();
+                        getWishlist();
+                        setOverlayText("Added to favourites!");
+                        setpopUpErr(false);
+                        setIsVisible(true);
                     },
                     error => {
                         console.log("Error inserting data into table: " + error.message);
@@ -98,9 +112,6 @@ const HotelDetailScreen = ({navigation, route}) => {
                     },
                 );
             });
-            setOverlayText("Added to favourites!");
-            setpopUpErr(false);
-            setIsVisible(true);
         }
         else {
             setOverlayText("Please sign-in to add hotels to favourites");
@@ -109,15 +120,19 @@ const HotelDetailScreen = ({navigation, route}) => {
     };
 
     // Function to remove hotels from user favourites
-    const removeFromFavourites = async () => {
+    const removeFromFavourites = () => {
         console.log(authentication.currentUser.uid);
-        await db.transaction(tx => {
+        db.transaction(tx => {
             tx.executeSql(
                 'DELETE FROM favourites WHERE hotelID=?',
                 [hotel.id],
                 (sqlTxn, res) => {
                     console.log("Removed from table successfully");
-                    getFavouriteHotels();
+                    getWishlist();
+                    setOverlayText("Removed from favourites!");
+                    setpopUpErr(false);
+                    setIsVisible(true);
+                    console.log(wishlist);
                 },
                 error => {
                     console.log("Error removing data from table: " + error.message);
@@ -127,10 +142,6 @@ const HotelDetailScreen = ({navigation, route}) => {
                 },
             );
         });
-        setOverlayText("Added to favourites!");
-        setpopUpErr(false);
-        setIsVisible(true);
-        console.log(favourites);
     };
 
     // Function to handle booking logic - if signed-in, then proceed
@@ -171,7 +182,7 @@ const HotelDetailScreen = ({navigation, route}) => {
                         onPress={navigation.goBack}
                     />
                     {
-                        favourites.some(checkHotel) ? 
+                        wishlist.some(checkHotel) ? 
                         (
                             <Ionicons name="bookmark" size={32} color={Colors.primary} onPress={removeFromFavourites}/>
                         )

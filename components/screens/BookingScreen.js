@@ -16,9 +16,11 @@ const db = openDatabase({
 
 const BookingScreen = ({navigation, route}) => {
     
+    // 'bookings' array from redux store 
     const { bookings } = useSelector((state) => state.bookings);
+
+    // To update application state upon successful CRUD operations
     const dispatch = useDispatch();
-    // const [bookings, setBookings] = useState([]);
 
     useEffect(() => {
         getBookedHotels();
