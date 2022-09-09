@@ -28,13 +28,12 @@ const ProfileScreen =({navigation}) =>{
                         color: Colors.grey}}>Log in to start booking your hotel.
                     </Text>
                 </View>
-                <View style={styles.loginButton}>
+                <View>
                         <TouchableOpacity onPress={() => navigation.navigate('LogIn')}>
-                            <View style={styles.buttonContainer}>
+                            <View style={styles.loginButton}>
                                 <Text style={{color: Colors.white, fontSize: 20, fontWeight: 'bold'}}>Log In</Text>
                             </View>
-                        </TouchableOpacity>
-                        
+                        </TouchableOpacity>                       
                 </View>
                 <View style={{flexDirection:'row'}} >
                     <Text style={{ 

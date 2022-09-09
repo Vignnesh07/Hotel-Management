@@ -117,9 +117,9 @@ const LogInScreen = ({navigation, onPress}) => {
                 </View>
 
 
-                <View style={styles.loginButton}>
+                <View>
                     <TouchableOpacity onPress={signInUser}>
-                        <View style={styles.buttonContainer}>
+                        <View style={styles.loginButton}>
                             <Text style={{color: Colors.white, fontSize: 20, fontWeight: 'bold'}}>Log In</Text>
                         </View>
                     </TouchableOpacity>    
